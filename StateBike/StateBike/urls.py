@@ -15,7 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from Sbike import views
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^registro/$', views.clientRegisterView, name='client_register'),
 ]
