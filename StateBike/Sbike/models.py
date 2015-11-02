@@ -1,46 +1,47 @@
 from django.db import models
-from django.contrib import admin
 from django.contrib.auth.models import User
-from django.contrib.auth.admin import UserAdmin
 
-#(general - could be Django's base User class?: no, we need DNI)
-class DUser(models.Model): 
-    user = models.OneToOneField(User)
-    DNI = models.IntegerField(default=0)
+class SBikeUser(models.Model):
+     user = models.OneToOneField(User)
 
-class Client(DUser):
-    tarjeta = models.IntegerField(default=0)
-    def BuscarBici(self):
-        pass
-    def ChequearSancion(self):
-        pass
+     dni = models.IntegerField(blank=False, primary_key=True)
+     phone_number = models.IntegerField(null=True, blank=True)
 
-#el nuevo admin es nuestro admin editado
-class UserAdmin(UserAdmin):
-    def MoverBicicleta(self):
-        pass
-    def CrearEstacion(self):
-        pass
+     def  __str__(self):
+        return self.dni
 
+class Client(SBikeUser):
+     card_number = models.IntegerField(blank=False, null=True)
+     expiration_date = models.DateField(blank=False, null=True)
+     security_code = models.IntegerField(blank=False, null=True)
+     def findStation(self):
+         pass
+     def checkPenalty(self):
+         pass
 
-class Employee(DUser):
-    def RepararBicicleta(self):
+class Admin(SBikeUser):
+     def moveBikes(self):
+         pass
+     def createStation(self):
+         pass
+     def createBike(self):
+         pass
+
+class Employee(SBikeUser):
+    def repairBike(self):
         pass
 
 class Station(models.Model):
-    Employee = models.ForeignKey(Employee)
-    nombre = models.CharField(max_length=200)
-    direccion = models.CharField(max_length=200)
-    DNI = models.IntegerField(default=0)
-    DNI = models.IntegerField(default=0)
-    def QuitarDeStock(self):
-        pass
-    def AgregarDeStock(self):
-        pass
-    def BicicletaAReparar(self):
-        pass
+    employee = models.ForeignKey(Employee)
 
-# convirtiendo nuestro admin a default UserAdmin
-# real warning chequear si esto funciona
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+    name = models.CharField(max_length=200)
+    address = models.CharField(max_length=200)
+    stock = models.IntegerField(blank=False)
+    capacity = models.IntegerField(blank=False)
+
+    def removeFromStock(self):
+        pass
+    def addToStock(self):
+        pass
+    def bikesToRepair(self):
+        pass
