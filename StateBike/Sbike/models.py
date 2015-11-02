@@ -45,3 +45,34 @@ class Station(models.Model):
         pass
     def bikesToRepair(self):
         pass
+
+class Bike(models.Model):
+    AVAILABLE = 'AV'
+    TAKEN = 'TK'
+    BROKEN = 'BR'
+    
+    STATE_CHOICES = (
+        (AVAILABLE, 'Available'),
+        (TAKEN, 'Taken'),
+        (BROKEN, 'Broken'),
+    )
+
+    state = models.CharField(max_length=2, choices=STATE_CHOICES, default=AVAILABLE)
+    station = models.ForeignKey(Station)
+    def __str__(self):
+        return self.bike_id
+    def takeBike(self):
+        pass
+    def repairBike(self):
+        pass
+    def returnBike(self):
+        pass
+
+class Loan(models.Model):
+    bike = models.ForeignKey(Bike)
+    startDate = models.DateTimeField(auto_now=False, auto_now_add=True)
+    endDate = models.DateTimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
+    def  __str__(self):
+        return "Loan: " + str(self.startDate)
+    def evalPenalty(self):
+        pass
