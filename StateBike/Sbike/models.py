@@ -2,30 +2,30 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class SBikeUser(models.Model):
-     user = models.OneToOneField(User)
+    user = models.OneToOneField(User)
 
-     dni = models.IntegerField(blank=False, primary_key=True)
-     phone_number = models.IntegerField(null=True, blank=True)
+    dni = models.IntegerField(blank=False, primary_key=True)
+    phone_number = models.IntegerField(null=True, blank=True)
 
-     def  __str__(self):
-        return self.dni
+    def  __str__(self):
+        return str(self.dni)
 
 class Client(SBikeUser):
-     card_number = models.IntegerField(blank=False, null=True)
-     expiration_date = models.DateField(blank=False, null=True)
-     security_code = models.IntegerField(blank=False, null=True)
-     def findStation(self):
-         pass
-     def checkPenalty(self):
-         pass
+    card_number = models.IntegerField(blank=False, null=True)
+    expiration_date = models.DateField(blank=False, null=True)
+    security_code = models.IntegerField(blank=False, null=True)
+    def findStation(self):
+        pass
+    def checkPenalty(self):
+        pass
 
 class Admin(SBikeUser):
-     def moveBikes(self):
-         pass
-     def createStation(self):
-         pass
-     def createBike(self):
-         pass
+    def moveBikes(self):
+        pass
+    def createStation(self):
+        pass
+    def createBike(self):
+        pass
 
 class Employee(SBikeUser):
     def repairBike(self):
@@ -39,6 +39,8 @@ class Station(models.Model):
     stock = models.IntegerField(blank=False)
     capacity = models.IntegerField(blank=False)
 
+    def  __str__(self):
+        return str(self.name)
     def removeFromStock(self):
         pass
     def addToStock(self):
@@ -59,17 +61,17 @@ class Bike(models.Model):
 
     state = models.CharField(max_length=2, choices=STATE_CHOICES, default=AVAILABLE)
     station = models.ForeignKey(Station)
-    def __str__(self):
-        return self.bike_id
-    def takeBike(self):
+    def  __str__(self):
+        return str(self.id)
+    def take(self):
         pass
-    def repairBike(self):
+    def repair(self):
         pass
-    def returnBike(self):
+    def giveBack(self):
         pass
 
 class Loan(models.Model):
-    bike = models.ForeignKey(Bike)
+    bike = models.OneToOneField(Bike)
     startDate = models.DateTimeField(auto_now=False, auto_now_add=True)
     endDate = models.DateTimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
     def  __str__(self):
