@@ -3,19 +3,19 @@ from django.contrib.auth.models import User
 from .models import Client
 
 class ClientRegisterForm(forms.Form):
-	username = forms.CharField(min_length=9)
-	password1 = forms.CharField(min_length=7, widget=forms.PasswordInput())
-	password2 = forms.CharField(min_length=7, widget=forms.PasswordInput())
+	username = forms.CharField(min_length=6, widget=forms.TextInput(attrs={'class': 'form-control'}))
+	password1 = forms.CharField(min_length=8, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+	password2 = forms.CharField(min_length=8, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
-	first_name = forms.CharField(max_length=30)
-	last_name = forms.CharField(max_length=30)
-	email = forms.EmailField()
+	first_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class': 'form-control'}))
+	last_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class': 'form-control'}))
+	email = forms.EmailField(widget=forms.TextInput(attrs={'class': 'form-control'}))
 
-	phone_number = forms.IntegerField(required=False)
-	dni = forms.IntegerField()
-	card_number = forms.IntegerField()
-	expiration_date = forms.DateField()
-	security_code = forms.IntegerField()
+	phone_number = forms.IntegerField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+	dni = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+	card_number = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+	expiration_date = forms.DateField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+	security_code = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control'}))
 
 	def clean_username(self):
 		"""Comprueba que no existe el mismo user en la db"""

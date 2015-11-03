@@ -1,5 +1,8 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
+from django.shortcuts import redirect
+from django.core.urlresolvers import reverse
+
 from .forms import ClientRegisterForm
 from .models import Client
 
@@ -42,6 +45,7 @@ def clientRegisterView(request):
 			client.security_code = security_code
 
 			client.save()
+			return redirect(reverse('welcome', kwargs={'username':username}))
 
 	else:
 		form = ClientRegisterForm()
@@ -49,3 +53,7 @@ def clientRegisterView(request):
 		'form' : form
 	}
 	return render(request, 'Sbike/client_register.html', context)
+
+
+def welcomeNewClientView(request, username):
+	return render(request, 'Sbike/welcome.html', {'username': username})
