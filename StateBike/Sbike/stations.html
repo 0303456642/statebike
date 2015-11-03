@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+
+<html> 
+
+<h1>List of Stations</h1>
+
+<ul>
+	{% for st in stations %}
+	<li>	{{st.name}} - {{st.address}} </li> 
+	{% endfor %}	
+
+</ul>
+
+</html>
