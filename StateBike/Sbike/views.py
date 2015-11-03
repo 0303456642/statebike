@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 
 from .forms import ClientRegisterForm
 from .models import Client
+from .models import Station
 
 def clientRegisterView(request):
 	if request.method == 'POST':
@@ -57,3 +58,14 @@ def clientRegisterView(request):
 
 def welcomeNewClientView(request, username):
 	return render(request, 'Sbike/welcome.html', {'username': username})
+
+def LocatorView(request):
+	stations = Station.objects.all()
+	return render(request, 'Sbike/stations.html', {'stations':stations})
+
+  
+
+
+
+
+
