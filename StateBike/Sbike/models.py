@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import datetime
 
 class SBikeUser(models.Model):
     user = models.OneToOneField(User)
@@ -71,10 +72,11 @@ class Bike(models.Model):
         pass
 
 class Loan(models.Model):
+    client = models.OneToOneField(Client)
     bike = models.OneToOneField(Bike)
-    startDate = models.DateTimeField(auto_now=False, auto_now_add=True)
+    startDate = models.DateTimeField(default=datetime.now)
     endDate = models.DateTimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
     def  __str__(self):
-        return "Loan: " + str(self.startDate)
+        return "Loan: " + str(self.id)
     def evalPenalty(self):
         pass
