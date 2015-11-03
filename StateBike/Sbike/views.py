@@ -7,6 +7,9 @@ from .forms import ClientRegisterForm
 from .models import Client
 from .models import Station
 
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+
 def clientRegisterView(request):
 	if request.method == 'POST':
 		form = ClientRegisterForm(request.POST)
@@ -63,9 +66,21 @@ def LocatorView(request):
 	stations = Station.objects.all()
 	return render(request, 'Sbike/stations.html', {'stations':stations})
 
-  
+def loginView(request):
+	if request.user.is_authenticated():
+		return render(request, 'Sbike/profile.html')
 
-
-
-
-
+	message = ''
+	if request.method == 'POST':
+		username = request.POST.get('username')
+		password = request.POST.get('password')
+		user = authenticate(username=username, password=password)
+		if user is not None:
+			if user.is_active:
+				login(request, user)
+				return render(request, 'Sbike/welcome.html', {'username' : username})
+			else:
+				message = 'El usuario ingresado se encuentra inactivo.'
+				return render(request, 'login.html', {'message' : message})
+		message = 'Nombre de usuario y/o password invalidos'
+	return render(request, 'Sbike/login.html', {'message' : message})
