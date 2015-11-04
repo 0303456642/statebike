@@ -18,12 +18,13 @@ from django.contrib import admin
 from Sbike import views
 
 urlpatterns = [
+    
+    url(r'^$', views.principal),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^weblogin/$', views.webLoginView, name='web_login'),
     url(r'^logout/$', views.logoutView, name='logout'),
     url(r'^stationlogin/$', views.stationLoginView, name='station_login'),    
     url(r'^register/$', views.clientRegisterView, name='client_register'),
-    #url(r'^home/$', views.clientRegisterView, name='client_register'),
-    url(r'^welcome/(?P<username>[\w]+)/$', views.welcomeNewClientView, name='welcome'),
-    url(r'^stations/$', views.locatorView,)
+    url(r'^stations/$', views.locatorView),
+    url(r'^webprofile/$', views.webProfile),
 ]
