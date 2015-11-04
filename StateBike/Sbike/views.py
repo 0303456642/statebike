@@ -20,7 +20,7 @@ def clientRegisterView(request):
 			cleaned_data = form.cleaned_data
 
 			username = cleaned_data.get('username')
-			password = cleaned_data.get('password')
+			password = cleaned_data.get('password1')
 
 			first_name = cleaned_data.get('first_name')
 			last_name = cleaned_data.get('last_name')
