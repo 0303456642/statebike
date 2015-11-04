@@ -14,8 +14,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
-def principal(req):
-    return render(req, 'Sbike/index.html')
+def principal(request):
+    return render(request, 'Sbike/index.html')
 
 def clientRegisterView(request):
     if request.user.is_authenticated():
@@ -80,9 +80,9 @@ def webLoginView(request):
                 login(request, user)
                 return redirect('/webprofile')
             else:
-                message = 'El usuario ingresado se encuentra inactivo.'
+                message = 'Inactive User'
                 return render(request, 'login.html', {'message' : message})
-        message = 'Nombre de usuario y/o password invalidos'
+        message = 'Invalid username/password'
     return render(request, 'Sbike/web_login.html', {'message' : message})
 
 def stationLoginView(request):
@@ -98,45 +98,44 @@ def stationLoginView(request):
                 login(request, user)
                 return redirect('/stationprofile')
             else:
-                message = 'El usuario ingresado se encuentra inactivo.'
+                message = 'Inactive User'
                 return render(request, 'login.html', {'message' : message})
-        message = 'Nombre de usuario y/o password invalidos'
+        message = 'Invalid username/password'
     return render(request, 'Sbike/station_login.html', {'message' : message})
 
 def morir():
     return HttpResponse('estas muerto')
 
-def webProfile(req):
-    # if it's authenticated, load the corresponding profile
-    if req.user.is_authenticated():
-        username = req.user.get_username()
+@login_required
+def webProfile(request):
+
+        username = request.user.get_username()
         clients = Client.objects.filter(user__username=username)
         admins = Admin.objects.filter(user__username=username)
         employees = Employee.objects.filter(user__username=username)
 
         if len(clients) == 1:
-            return clientProfile(req, clients[0])
+            return clientProfile(request, clients[0])
 
 
         elif len(admins) == 1 or username == 'admin':
             if len(admins) == 0:
-                return HttpResponse('Usted es el admin de django. <a href="../logout">Cerrar Sesion</a>')
+                message = 'Usted es el admin de django. PENSAR BIEN ESTA SITUACION'
+                return render(request, 'Sbike/admin_profile.html', {'message' : message})
             else:
-                return adminProfile(req, admins[0])
+                return adminProfile(request, admins[0])
 
 
         elif len(employees) == 1:
-            return employeeProfile(req, employees[0])
+            return employeeProfile(request, employees[0])
 
-
+#Esto que sigue ya no deberia volver a ocurrir.
+#Si alguien lo detecta. Avise!!
         else:
             return HttpResponse('Error: Hay un usuario logueado inexistente en la base de datos o varios usuarios comparten el mismo username "%s"' % username)
-    # if it's not authenticated, send to login
-    else:
-        return redirect('/weblogin')
 
 
-def clientProfile(req, client):
+def clientProfile(request, client):
 
     # create basic info dict
     dict = createUserDict(client)
@@ -146,17 +145,17 @@ def clientProfile(req, client):
     dict['exp_date'] = client.expiration_date
     dict['sec_code'] = client.security_code
 
-    return render(req, 'Sbike/client_profile.html', dict)
+    return render(request, 'Sbike/client_profile.html', dict)
 
-def adminProfile(req, admin):
+def adminProfile(request, admin):
 
     dict = createUserDict(admin)
-    return render(req, 'Sbike/admin_profile.html', dict)
+    return render(request, 'Sbike/admin_profile.html', dict)
 
-def employeeProfile(req, employee):
+def employeeProfile(request, employee):
 
     dict = createUserDict(employee)
-    return render(req, 'Sbike/employee_profile.html', dict)
+    return render(request, 'Sbike/employee_profile.html', dict)
 
 def createUserDict(sbuser):
 
@@ -191,9 +190,9 @@ def webLoginView(request):
                 login(request, user)
                 return redirect('/webprofile')
             else:
-                message = 'El usuario ingresado se encuentra inactivo.'
+                message = 'Inactive User'
                 return render(request, 'login.html', {'message' : message})
-        message = 'Nombre de usuario y/o password invalidos'
+        message = 'Invalid username/password'
     return render(request, 'Sbike/web_login.html', {'message' : message})
 
 def stationLoginView(request):
@@ -211,9 +210,9 @@ def stationLoginView(request):
                 login(request, user)
                 return redirect('/stationProfile')
             else:
-                message = 'El usuario ingresado se encuentra inactivo.'
+                message = 'Inactive User'
                 return render(request, 'login.html', {'message' : message})
-        message = 'Nombre de usuario y/o password invalidos'
+        message = 'Invalid username/password'
     return render(request, 'Sbike/station_login.html', {'message' : message})
 
 @login_required

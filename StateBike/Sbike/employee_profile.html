@@ -4,6 +4,14 @@
 
 {% block content %}
 
-<h1> hi everybody </h1>
+<h1>Employee Profile of {{ username }} </h1>
+
+<h2>Personal Data</h2>
+<ul>
+  <li>Name: {{ fname }} {{ lname }}</li>
+  <li>DNI: {{ dni }}</li>
+  <li>Phone Number: {{ phone }}</li>
+  <li>Email: {{ email }}</li>
+</ul>
 
 {% endblock content %}
