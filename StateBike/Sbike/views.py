@@ -7,7 +7,8 @@ from .forms import ClientRegisterForm
 from .models import Client
 from .models import Station
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 def clientRegisterView(request):
@@ -58,17 +59,18 @@ def clientRegisterView(request):
 	}
 	return render(request, 'Sbike/client_register.html', context)
 
-
+@login_required
 def welcomeNewClientView(request, username):
 	return render(request, 'Sbike/welcome.html', {'username': username})
 
+@login_required
 def locatorView(request):
 	stations = Station.objects.all()
 	return render(request, 'Sbike/stations.html', {'stations':stations})
 
 def webLoginView(request):
 	if request.user.is_authenticated():
-		return redirect('Sbike.views.webProfile')
+		return redirect('/webprofile')
 
 	message = ''
 	if request.method == 'POST':
@@ -78,7 +80,7 @@ def webLoginView(request):
 		if user is not None:
 			if user.is_active:
 				login(request, user)
-				return redirect('Sbike.views.webProfile')
+				return redirect('/webprofile')
 			else:
 				message = 'El usuario ingresado se encuentra inactivo.'
 				return render(request, 'login.html', {'message' : message})
@@ -87,7 +89,7 @@ def webLoginView(request):
 
 def stationLoginView(request):
 	if request.user.is_authenticated():
-		return redirect('Sbike.views.stationProfile')
+		return redirect('/stationProfile')
 
 	message = ''
 	if request.method == 'POST':
@@ -97,9 +99,15 @@ def stationLoginView(request):
 		if user is not None:
 			if user.is_active:
 				login(request, user)
-				return redirect('Sbike.views.stationProfile')
+				return redirect('/stationProfile')
 			else:
 				message = 'El usuario ingresado se encuentra inactivo.'
 				return render(request, 'login.html', {'message' : message})
 		message = 'Nombre de usuario y/o password invalidos'
 	return render(request, 'Sbike/station_login.html', {'message' : message})
+
+@login_required
+def logoutView(request):
+	logout(request)
+	messages.success(request, 'You have successfully logged out!')
+	return redirect(reverse('/weblogin'))
