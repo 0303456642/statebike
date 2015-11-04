@@ -169,7 +169,3 @@ def createUserDict(sbuser):
     dict['phone'] = sbuser.phone_number
 
     return dict
-
-def closeSesion(req):
-    logout(req)
-    return redirect('/')
