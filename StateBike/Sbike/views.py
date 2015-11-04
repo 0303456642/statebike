@@ -110,4 +110,4 @@ def stationLoginView(request):
 def logoutView(request):
 	logout(request)
 	messages.success(request, 'You have successfully logged out!')
-	return redirect(reverse('/weblogin'))
+	return redirect('/weblogin')
