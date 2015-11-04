@@ -36,8 +36,6 @@ def clientRegisterView(request):
             expiration_date = cleaned_data.get('expiration_date')
             security_code = cleaned_data.get('security_code')
 
-            print('la pass es: "%s"' % password)
-
             user = User.objects.create_user(username, email, password)
 
             user.first_name = first_name
@@ -109,7 +107,7 @@ def morir():
     return HttpResponse('estas muerto')
 
 def webProfile(req):
-    # Si esta autenticado cargamos el perfil correspondiente
+    # if it's authenticated, load the corresponding profile
     if req.user.is_authenticated():
         username = req.user.get_username()
         clients = Client.objects.filter(user__username=username)
@@ -133,7 +131,7 @@ def webProfile(req):
 
         else:
             return HttpResponse('Error: Hay un usuario logueado inexistente en la base de datos o varios usuarios comparten el mismo username "%s"' % username)
-    # si no esta autenticado lo mandamos al login
+    # if it's not authenticated, send to login
     else:
         return redirect('/weblogin')
 
@@ -153,13 +151,11 @@ def clientProfile(req, client):
 def adminProfile(req, admin):
 
     dict = createUserDict(admin)
-
     return render(req, 'Sbike/admin_profile.html', dict)
 
 def employeeProfile(req, employee):
 
     dict = createUserDict(employee)
-
     return render(req, 'Sbike/employee_profile.html', dict)
 
 def createUserDict(sbuser):
@@ -173,3 +169,7 @@ def createUserDict(sbuser):
     dict['phone'] = sbuser.phone_number
 
     return dict
+
+def closeSesion(req):
+    logout(req)
+    return redirect('/')
