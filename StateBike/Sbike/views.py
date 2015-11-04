@@ -68,7 +68,7 @@ def locatorView(request):
 
 def webLoginView(request):
 	if request.user.is_authenticated():
-		return render(request, 'Sbike/profile.html')
+		return redirect('Sbike.views.webProfile')
 
 	message = ''
 	if request.method == 'POST':
@@ -78,7 +78,7 @@ def webLoginView(request):
 		if user is not None:
 			if user.is_active:
 				login(request, user)
-				return render(request, 'Sbike/web_profile.html')
+				return redirect('Sbike.views.webProfile')
 			else:
 				message = 'El usuario ingresado se encuentra inactivo.'
 				return render(request, 'login.html', {'message' : message})
@@ -87,7 +87,7 @@ def webLoginView(request):
 
 def stationLoginView(request):
 	if request.user.is_authenticated():
-		return render(request, 'Sbike/profile.html')
+		return redirect('Sbike.views.stationProfile')
 
 	message = ''
 	if request.method == 'POST':
@@ -97,7 +97,7 @@ def stationLoginView(request):
 		if user is not None:
 			if user.is_active:
 				login(request, user)
-				return render(request, 'Sbike/station_profile.html')
+				return redirect('Sbike.views.stationProfile')
 			else:
 				message = 'El usuario ingresado se encuentra inactivo.'
 				return render(request, 'login.html', {'message' : message})
