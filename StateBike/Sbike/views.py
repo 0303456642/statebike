@@ -62,11 +62,11 @@ def clientRegisterView(request):
 def welcomeNewClientView(request, username):
 	return render(request, 'Sbike/welcome.html', {'username': username})
 
-def LocatorView(request):
+def locatorView(request):
 	stations = Station.objects.all()
 	return render(request, 'Sbike/stations.html', {'stations':stations})
 
-def loginView(request):
+def webLoginView(request):
 	if request.user.is_authenticated():
 		return render(request, 'Sbike/profile.html')
 
@@ -78,9 +78,28 @@ def loginView(request):
 		if user is not None:
 			if user.is_active:
 				login(request, user)
-				return render(request, 'Sbike/welcome.html', {'username' : username})
+				return render(request, 'Sbike/web_profile.html')
 			else:
 				message = 'El usuario ingresado se encuentra inactivo.'
 				return render(request, 'login.html', {'message' : message})
 		message = 'Nombre de usuario y/o password invalidos'
-	return render(request, 'Sbike/login.html', {'message' : message})
+	return render(request, 'Sbike/web_login.html', {'message' : message})
+
+def stationLoginView(request):
+	if request.user.is_authenticated():
+		return render(request, 'Sbike/profile.html')
+
+	message = ''
+	if request.method == 'POST':
+		username = request.POST.get('username')
+		password = request.POST.get('password')
+		user = authenticate(username=username, password=password)
+		if user is not None:
+			if user.is_active:
+				login(request, user)
+				return render(request, 'Sbike/station_profile.html')
+			else:
+				message = 'El usuario ingresado se encuentra inactivo.'
+				return render(request, 'login.html', {'message' : message})
+		message = 'Nombre de usuario y/o password invalidos'
+	return render(request, 'Sbike/station_login.html', {'message' : message})
