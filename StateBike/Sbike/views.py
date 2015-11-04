@@ -2,73 +2,71 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
+from django.http import HttpResponse
 
 from .forms import ClientRegisterForm
 from .models import Client
+from .models import Admin
+from .models import Employee
 from .models import Station
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 def clientRegisterView(request):
-	if request.method == 'POST':
-		form = ClientRegisterForm(request.POST)
+    if request.method == 'POST':
+        form = ClientRegisterForm(request.POST)
 
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            username = cleaned_data.get('username')
+            password = cleaned_data.get('password')
+            first_name = cleaned_data.get('first_name')
+            last_name = cleaned_data.get('last_name')
+            email = cleaned_data.get('email')
+            phone_number = cleaned_data.get('phone_number')
+            dni = cleaned_data.get('dni')
+            card_number = cleaned_data.get('card_number')
+            expiration_date = cleaned_data.get('expiration_date')
+            security_code = cleaned_data.get('security_code')
 
-		if form.is_valid():
-			cleaned_data = form.cleaned_data
+            user = User.objects.create_user(username=username, password=password)
 
-			username = cleaned_data.get('username')
-			password = cleaned_data.get('password')
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
 
-			first_name = cleaned_data.get('first_name')
-			last_name = cleaned_data.get('last_name')
-			email = cleaned_data.get('email')
-			phone_number = cleaned_data.get('phone_number')
-			dni = cleaned_data.get('dni')
-			card_number = cleaned_data.get('card_number')
-			expiration_date = cleaned_data.get('expiration_date')
-			security_code = cleaned_data.get('security_code')
+            user.save()
 
-			user = User.objects.create_user(username=username, password=password)
+            client = Client()
+            client.user = user
+            client.phone_number = phone_number
+            client.dni = dni
+            client.card_number = card_number
+            client.expiration_date = expiration_date
+            client.security_code = security_code
 
-			user.first_name = first_name
-			user.last_name = last_name
-			user.email = email
+            client.save()
+            return redirect(reverse('welcome', kwargs={'username':username}))
 
-			user.save()
-
-
-			client = Client()
-
-			client.user = user
-			client.phone_number = phone_number
-			client.dni = dni
-			client.card_number = card_number
-			client.expiration_date = expiration_date
-			client.security_code = security_code
-
-			client.save()
-			return redirect(reverse('welcome', kwargs={'username':username}))
-
-	else:
-		form = ClientRegisterForm()
-	context = {
-		'form' : form
-	}
-	return render(request, 'Sbike/client_register.html', context)
+    else:
+        form = ClientRegisterForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'Sbike/client_register.html', context)
 
 
 def welcomeNewClientView(request, username):
-	return render(request, 'Sbike/welcome.html', {'username': username})
+    return render(request, 'Sbike/welcome.html', {'username': username})
 
 def locatorView(request):
-	stations = Station.objects.all()
-	return render(request, 'Sbike/stations.html', {'stations':stations})
+    stations = Station.objects.all()
+    return render(request, 'Sbike/stations.html', {'stations':stations})
 
 def webLoginView(request):
 	if request.user.is_authenticated():
-		return redirect('Sbike.views.webProfile')
+		return redirect('/webprofile')
 
 	message = ''
 	if request.method == 'POST':
@@ -78,7 +76,7 @@ def webLoginView(request):
 		if user is not None:
 			if user.is_active:
 				login(request, user)
-				return redirect('Sbike.views.webProfile')
+				return redirect('/webprofile')
 			else:
 				message = 'El usuario ingresado se encuentra inactivo.'
 				return render(request, 'login.html', {'message' : message})
@@ -87,7 +85,7 @@ def webLoginView(request):
 
 def stationLoginView(request):
 	if request.user.is_authenticated():
-		return redirect('Sbike.views.stationProfile')
+		return redirect('/stationprofile')
 
 	message = ''
 	if request.method == 'POST':
@@ -97,9 +95,85 @@ def stationLoginView(request):
 		if user is not None:
 			if user.is_active:
 				login(request, user)
-				return redirect('Sbike.views.stationProfile')
+				return redirect('/stationprofile')
 			else:
 				message = 'El usuario ingresado se encuentra inactivo.'
 				return render(request, 'login.html', {'message' : message})
 		message = 'Nombre de usuario y/o password invalidos'
 	return render(request, 'Sbike/station_login.html', {'message' : message})
+
+def morir():
+    return HttpResponse('estas muerto')
+
+
+def webProfile(req):
+        # Si esta autenticado cargamos el perfil correspondiente
+        if req.user.is_authenticated():
+                username = req.user.get_username()
+                clients = Client.objects.filter(user__username=username)
+                admins = Admin.objects.filter(user__username=username)
+                employees = Employee.objects.filter(user__username=username)
+
+                if len(clients) == 1:
+                        return clientProfile(req, clients[0])
+
+
+                elif len(admins) == 1 or username == 'admin':
+                        if len(admins) == 0:
+                                return HttpResponse('Usted es el admin de django. <a href="../close">Cerrar Sesion</a>')
+                        else:
+                                return adminProfile(req, admins[0])
+
+
+                elif len(employees) == 1:
+                        return employeeProfile(req, employees[0])
+
+
+                else:
+                        return HttpResponse('Error: Hay un usuario logueado inexistente en la base de datos o varios usuarios comparten el mismo username "%s"' % username)
+        # si no esta autenticado lo mandamos al login
+        else:
+                print('no estas autenticado papu')
+                return redirect('/weblogin')
+
+
+def clientProfile(req, client):
+
+    # create basic info dict
+    dict = createUserDict(client)
+
+    # add extra client info
+    dict['card_number'] = client.card_number
+    dict['exp_date'] = client.expiration_date
+    dict['sec_code'] = client.security_code
+
+    return render(req, 'Sbike/client_profile.html', dict)
+
+def adminProfile(req, admin):
+
+    dict = createUserDict(admin)
+
+    return render(req, 'Sbike/admin_profile.html', dict)
+
+def employeeProfile(req, employee):
+
+    dict = createUserDict(employee)
+
+    return render(req, 'Sbike/employee_profile.html', dict)
+
+def createUserDict(sbuser):
+
+    dict = {}
+    dict['fname'] = sbuser.user.first_name
+    dict['lname'] = sbuser.user.last_name
+    dict['username'] = sbuser.user.username
+    dict['email'] = sbuser.user.email
+    dict['dni'] = sbuser.dni
+    dict['phone'] = sbuser.phone_number
+
+    return dict
+
+
+def closeSesion(req):
+    logout(req)
+    return redirect('/')
