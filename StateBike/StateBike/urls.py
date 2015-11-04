@@ -19,9 +19,10 @@ from Sbike import views
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^login/$', views.loginView, name='login'),
+    url(r'^weblogin/$', views.webLoginView, name='web_login'),
+    url(r'^stationlogin/$', views.stationLoginView, name='station_login'),    
     url(r'^register/$', views.clientRegisterView, name='client_register'),
-    url(r'^home/$', views.clientRegisterView, name='client_register'),
+    #url(r'^home/$', views.clientRegisterView, name='client_register'),
     url(r'^welcome/(?P<username>[\w]+)/$', views.welcomeNewClientView, name='welcome'),
-    url(r'^stations/$', views.LocatorView,)
+    url(r'^stations/$', views.locatorView,)
 ]

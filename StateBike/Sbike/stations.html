@@ -1,14 +1,13 @@
-<!DOCTYPE html>
+{% extends 'Sbike/base.html' %}
 
-<html> 
+{% block title %}Stations{% endblock title %}
 
+{% block content %}
 <h1>List of Stations</h1>
 
 <ul>
 	{% for st in stations %}
 	<li>	{{st.name}} - {{st.address}} </li> 
 	{% endfor %}	
-
 </ul>
-
-</html>
+{% endblock content %}
