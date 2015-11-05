@@ -11,7 +11,9 @@
                     {{ message }}
                 </div>
             {% endif %}
-
+            <div>
+                <img src="/static/img/bike3.png" alt="texto descriptivo">
+            </div>
             <form method="post" action="">
                 {% csrf_token %}
                 <div class="form-group">
@@ -22,10 +24,7 @@
                     <label for="password">Password</label>
                     <input type="password" name="password" id="password" class="form-control">
                 </div>
-                <button type="submit" class="btn btn-primary">Login</button>
-            </form><br>
-            <form method="get" action="/register">
-                <button type="submit" class="btn btn-primary">Register</button>
+                <button type="submit" class="btn btn-default">Login</button>    <a class="btn btn-default" href="/register">Register</a>
             </form>
         </div>
     </div>

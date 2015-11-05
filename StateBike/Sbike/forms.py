@@ -3,19 +3,19 @@ from django.contrib.auth.models import User
 from .models import Client
 
 class ClientRegisterForm(forms.Form):
-	username = forms.CharField(min_length=6, widget=forms.TextInput(attrs={'class': 'form-control'}))
-	password1 = forms.CharField(min_length=8, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
-	password2 = forms.CharField(min_length=8, widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+	username = forms.CharField(min_length=6, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}))
+	password1 = forms.CharField(min_length=8, widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
+	password2 = forms.CharField(min_length=8, widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm Password'}))
 
-	first_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class': 'form-control'}))
-	last_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class': 'form-control'}))
-	email = forms.EmailField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+	first_name = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}))
+	last_name = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}))
+	email = forms.EmailField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'example@example.com'}))
 
-	phone_number = forms.IntegerField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
-	dni = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-	card_number = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-	expiration_date = forms.DateField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-	security_code = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+	phone_number = forms.IntegerField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}))
+	dni = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'DNI'}))
+	card_number = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Card Number'}))
+	expiration_date = forms.DateField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}))
+	security_code = forms.IntegerField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'xxxx'}))
 
 	def clean_username(self):
 		"""Comprueba que no existe el mismo user en la db"""
