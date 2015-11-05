@@ -109,6 +109,30 @@ def stationLoginView(request):
 def morir():
     return HttpResponse('estas muerto')
 
+#EVITAR REPETIR CODIGO
+
+@login_required
+def stationProfile(request):
+    username = request.user.get_username()
+    clients = Client.objects.filter(user__username=username)
+
+    if len(clients) == 1:
+        # create basic info dict
+        dict = createUserDict(clients[0])
+
+        # add extra client info
+        #QUITAR TANTOS [0] Y REEMPLEZARLOS POR UNA VARIABLE
+        dict['card_number'] = clients[0].card_number
+        dict['exp_date'] = clients[0].expiration_date
+        dict['sec_code'] = clients[0].security_code
+
+        return render(request, 'Sbike/station_profile.html', dict)
+        
+    else:
+        logout(request)
+        messages.error(request, 'Admin/Employee can not login!')
+        return redirect('/stationlogin')
+
 @login_required
 def webProfile(request):
 
@@ -136,7 +160,6 @@ def webProfile(request):
 #Si alguien lo detecta. Avise!!
         else:
             return HttpResponse('Error: Hay un usuario logueado inexistente en la base de datos o varios usuarios comparten el mismo username "%s"' % username)
-
 
 def clientProfile(request, client):
 
@@ -200,7 +223,7 @@ def webLoginView(request):
 
 def stationLoginView(request):
     if request.user.is_authenticated():
-        return redirect('/stationProfile')
+        return redirect('/stationprofile')
 
     message = ''
     if request.method == 'POST':
@@ -211,7 +234,7 @@ def stationLoginView(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return redirect('/stationProfile')
+                return redirect('/stationprofile')
             else:
                 message = 'Inactive User'
                 return render(request, 'login.html', {'message' : message})
