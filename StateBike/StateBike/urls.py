@@ -21,6 +21,7 @@ urlpatterns = [
     
     url(r'^$', views.principal),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^homePrinc/$',views.homePrinc, name='homePrinc'),
     url(r'^weblogin/$', views.webLoginView, name='web_login'),
     url(r'^logout/$', views.logoutView, name='logout'),
     url(r'^stationlogin/$', views.stationLoginView, name='station_login'),    
