@@ -1,0 +1,13 @@
+{% extends 'Sbike/base.html' %}
+
+{% block title %}Bike Loan{% endblock title %}
+
+{% block content %}
+<h1>List of Bikes</h1>
+
+<ul>{{ message}}
+	{% for bike in bikes %}
+	<li> {{bike.state}} </li> 
+	{% endfor %}	
+</ul>
+{% endblock content %}

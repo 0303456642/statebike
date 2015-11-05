@@ -3,12 +3,14 @@ from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
+from django.core.exceptions import ObjectDoesNotExist
 
 from .forms import ClientRegisterForm
 from .models import Client
 from .models import Admin
 from .models import Employee
 from .models import Station
+from .models import Bike
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -68,6 +70,17 @@ def locatorView(request):
 
 def home(request):
     return render(request,'Sbike/home.html')
+
+@login_required
+def bikeLoan(request):
+    bikes = ''
+    message = 'ooo'  
+    try:    	
+        bikes = Bike.objects.filter(state='AV')
+    except ObjectDoesNotExist:
+        mesagge = 'No hay bicis'
+    return render(request,'Sbike/bike_loan.html', {'message' : message}, {'bikes' : bikes})
+
 
 def webLoginView(request):
     if request.user.is_authenticated():
