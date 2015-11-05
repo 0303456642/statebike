@@ -27,5 +27,6 @@ urlpatterns = [
     url(r'^stationlogin/$', views.stationLoginView, name='station_login'),    
     url(r'^register/$', views.clientRegisterView, name='client_register'),
     url(r'^stations/$', views.locatorView),
+    url(r'^stationprofile/$', views.stationProfile),
     url(r'^webprofile/$', views.webProfile),
 ]
