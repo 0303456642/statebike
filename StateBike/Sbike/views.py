@@ -3,15 +3,17 @@ from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
+from django.core.exceptions import ObjectDoesNotExist
 
 from .forms import ClientRegisterForm
 from .models import Client
 from .models import Admin
 from .models import Employee
 from .models import Station
+from .models import Loan
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
+from django.contrib import messages	
 from django.contrib.auth.decorators import login_required
 
 def principal(request):
@@ -66,8 +68,8 @@ def locatorView(request):
     stations = Station.objects.all()
     return render(request, 'Sbike/stations.html', {'stations':stations})
 
-def home(request):
-    return render(request,'Sbike/home.html')
+def homePrinc(request):
+    return render(request,'Sbike/homePrinc.html')
 
 def webLoginView(request):
     if request.user.is_authenticated():
@@ -246,3 +248,50 @@ def logoutView(request):
     logout(request)
     messages.success(request, 'You have successfully logged out!')
     return redirect('/weblogin')
+
+@login_required
+def getbackView(request):
+	current_user = request.user
+	current_client = Client.objects.get(user = current_user)
+	loan = Loan.objects.get(client=current_client)
+	if loan is None:
+		message = 'Se ha producido un error'
+	else:
+		bike = Bike.objects.get(bike=loan.bike)
+		
+		loan.delete()
+		message = 'La bicicleta fue devuelta correctamente!'
+
+	return render(request, 'Sbike/get_back.html', {'message' : message})
+
+	if request.method == 'POST':
+		return redirect('Sbike.views.stationsProfile')
+
+
+
+@login_required
+def givebackView(request):
+	current_user = request.user
+	current_client = Client.objects.get(user = current_user)
+	try:
+		loan = Loan.objects.get(client=current_client)
+	except ObjectDoesNotExist:
+		loan = None
+	if loan is None:
+		message = 'Se ha producido un error'
+	else:
+		bike = Bike.objects.get(bike=loan.bike)
+		
+		loan.delete()
+		message = 'La bicicleta fue devuelta correctamente!'
+
+	return render(request, 'Sbike/give_back.html', {'message' : message})
+
+
+
+
+
+
+
+
+
