@@ -66,8 +66,8 @@ def locatorView(request):
     stations = Station.objects.all()
     return render(request, 'Sbike/stations.html', {'stations':stations})
 
-def homePrinc(request):
-    return render(request,'Sbike/homePrinc.html')
+def home(request):
+    return render(request,'Sbike/home.html')
 
 def webLoginView(request):
     if request.user.is_authenticated():
