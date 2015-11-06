@@ -10,7 +10,7 @@ class SBikeUser(models.Model):
     phone_number = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return str(self.dni)
+        return "DNI: " + str(self.dni)
 
 
 class Client(SBikeUser):
@@ -63,7 +63,7 @@ class Bike(models.Model):
     station = models.ForeignKey(Station)
 
     def __str__(self):
-        return str(self.id)
+        return "Bike: " + str(self.id)
 
     def take(self):
         self.state = 'TK'
