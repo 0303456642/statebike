@@ -29,5 +29,6 @@ urlpatterns = [
     url(r'^stations/$', views.locatorView),
     url(r'^stationprofile/$', views.stationProfile),
     url(r'^webprofile/$', views.webProfile),
+    url(r'^bikeloan/$', views.bikeLoan)
     url(r'giveback/$', views.givebackView)
 ]

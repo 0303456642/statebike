@@ -2,3 +2,12 @@ body {
 	background-color: white;
     margin: 40px 0 70px 0;
 }
+.btn {
+	display: block;
+    margin: 15px 0px 0px 0px;
+}
+
+input[type="submit"] {
+        margin: 10px 0px 0px 0px;
+        width: 100%;
+}
