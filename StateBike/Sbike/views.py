@@ -4,21 +4,18 @@ from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages 
+from django.contrib.auth.decorators import login_required
 
 from .forms import ClientRegisterForm
+
 from .models import Client
 from .models import Admin
 from .models import Employee
 from .models import Station
 from .models import Bike
 from .models import Loan
-
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-
-def principal(request):
-    return render(request, 'Sbike/index.html')
 
 def clientRegisterView(request):
     if request.user.is_authenticated():
@@ -69,8 +66,8 @@ def locatorView(request):
     stations = Station.objects.all()
     return render(request, 'Sbike/stations.html', {'stations':stations})
 
-def home(request):
-    return render(request,'Sbike/home.html')
+def homePrinc(request):
+    return render(request,'Sbike/homePrinc.html')
 
 @login_required
 def bikeLoan(request):
@@ -269,3 +266,21 @@ def logoutView(request):
     logout(request)
     messages.success(request, 'You have successfully logged out!')
     return redirect('/weblogin')
+    
+@login_required
+def givebackView(request):
+	current_user = request.user
+	current_client = Client.objects.get(user = current_user)
+	try:
+		loan = Loan.objects.get(client=current_client)
+	except ObjectDoesNotExist:
+		loan = None
+	if loan is None:
+		message = 'Se ha producido un error'
+	else:
+		bike = Bike.objects.get(bike=loan.bike)
+		
+		loan.delete()
+		message = 'La bicicleta fue devuelta correctamente!'
+
+	return render(request, 'Sbike/give_back.html', {'message' : message})
