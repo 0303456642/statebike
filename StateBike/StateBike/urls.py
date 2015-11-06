@@ -19,9 +19,9 @@ from Sbike import views
 
 urlpatterns = [
     
-    url(r'^$', views.principal),
+    url(r'^$', views.home),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^homePrinc/$',views.homePrinc, name='homePrinc'),
+    url(r'^home/$',views.home, name='home'),
     url(r'^weblogin/$', views.webLoginView, name='web_login'),
     url(r'^logout/$', views.logoutView, name='logout'),
     url(r'^stationlogin/$', views.stationLoginView, name='station_login'),    
@@ -29,6 +29,6 @@ urlpatterns = [
     url(r'^stations/$', views.locatorView),
     url(r'^stationprofile/$', views.stationProfile),
     url(r'^webprofile/$', views.webProfile),
-    url(r'^bikeloan/$', views.bikeLoan)
-    url(r'giveback/$', views.givebackView)
+    url(r'^bikeloan/$', views.bikeLoan),
+    url(r'^giveback/$', views.givebackView)
 ]
