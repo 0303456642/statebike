@@ -3,11 +3,15 @@
 {% block title %}Bike Loan{% endblock title %}
 
 {% block content %}
-<h1>List of Bikes</h1>
-
-<ul>{{ message}}
+<ul><h1>Select a Bike</h1>
+<form method="post" id="bikesform">
+{% csrf_token %}
+	<select name="select" class="form-control" form="bikesform">
 	{% for bike in bikes %}
-	<li> {{bike.state}} </li> 
-	{% endfor %}	
+	  <option value={{bike.id}} >{{bike.id}}</option>
+	{% endfor %}
+	</select>
+	<input class="btn btn-default" type="submit" value="Select">
+</form>	
 </ul>
 {% endblock content %}

@@ -11,6 +11,7 @@ from .models import Admin
 from .models import Employee
 from .models import Station
 from .models import Bike
+from .models import Loan
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -73,13 +74,22 @@ def home(request):
 
 @login_required
 def bikeLoan(request):
-    bikes = ''
-    message = 'ooo'  
-    try:    	
-        bikes = Bike.objects.filter(state='AV')
-    except ObjectDoesNotExist:
-        mesagge = 'No hay bicis'
-    return render(request,'Sbike/bike_loan.html', {'message' : message}, {'bikes' : bikes})
+    if request.method == 'POST':
+        bike_id = request.POST.get('select')
+        
+        Bike.objects.filter(id=bike_id).update(state='TK')
+        loan = Loan()
+        loan.client = request.POST.get('username')
+        loan.bike = bike_id
+        loan.save()
+
+        messages.success(request, 'Tomaste la bicicleta id : '+str(bike_id))
+        return redirect('/webprofile')
+    ####PENSAR EN COMO ELIMINAR LA POSIBILIDAD DE VOLVER A PEDIR
+    bikes = Bike.objects.filter(state='AV')
+    if len(bikes) == 0:
+        messages.error(request, 'Sorry, No Bikes Available!')
+    return render(request, 'Sbike/bike_loan.html', ({'bikes' : bikes}))
 
 
 def webLoginView(request):
