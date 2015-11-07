@@ -1,12 +1,12 @@
 from django.shortcuts import render
-from django.contrib.auth.models import User
 from django.shortcuts import redirect
-from django.core.urlresolvers import reverse
-from django.http import HttpResponse
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import authenticate, login, logout
+
 from django.contrib import messages 
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 
 from .forms import ClientRegisterForm
@@ -18,6 +18,9 @@ from .models import Station
 from .models import Bike
 from .models import Loan
 
+###------------------------------------------------------------------------------------------------------------------------------------###
+###---------------------------------------------------------REGISTER-------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
 def clientRegisterView(request):
     if request.user.is_authenticated():
         return redirect('/webprofile')
@@ -54,6 +57,7 @@ def clientRegisterView(request):
             client.security_code = security_code
 
             client.save()
+            messages.success(request, 'You Have Successfully Registered')
             return redirect('/weblogin')
 
     else:
@@ -62,32 +66,39 @@ def clientRegisterView(request):
         'form' : form
     }
     return render(request, 'Sbike/client_register.html', context)
+###------------------------------------------------------------------------------------------------------------------------------------###
+###----------------------------------------------------END--REGISTER-------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
 
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###----------------------------------------------------------LOCATOR-------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+@login_required
 def locatorView(request):
     stations = Station.objects.all()
     return render(request, 'Sbike/stations.html', {'stations':stations})
 
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------------END--LOCATOR-------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###----------------------------------------------------------HOME----------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
 def home(request):
     return render(request,'Sbike/home.html')
 
-@login_required
-def bikeLoan(request):
-    if request.method == 'POST':
-        bike_id = request.POST.get('select')
-        
-        Bike.objects.filter(id=bike_id).update(state='TK')
-        loan = Loan()
-        loan.client = request.POST.get('username')
-        loan.bike = bike_id
-        loan.save()
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------------END--HOME----------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
 
-        messages.success(request, 'Tomaste la bicicleta id : '+str(bike_id))
-        return redirect('/webprofile')
-    ####PENSAR EN COMO ELIMINAR LA POSIBILIDAD DE VOLVER A PEDIR
-    bikes = Bike.objects.filter(state='AV')
-    if len(bikes) == 0:
-        messages.error(request, 'Sorry, No Bikes Available!')
-    return render(request, 'Sbike/bike_loan.html', ({'bikes' : bikes}))
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------------WEB--LOGIN---------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
 
 
 def webLoginView(request):
@@ -99,6 +110,7 @@ def webLoginView(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
+
         if user is not None:
             if user.is_active:
                 login(request, user)
@@ -109,14 +121,26 @@ def webLoginView(request):
         message = 'Invalid username/password'
     return render(request, 'Sbike/web_login.html', {'message' : message})
 
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------------WEB--LOGIN---------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------------STATION--LOGIN-----------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
 def stationLoginView(request):
     if request.user.is_authenticated():
         return redirect('/stationprofile')
+
     message = ''
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
+
         if user is not None:
             if user.is_active:
                 login(request, user)
@@ -127,10 +151,29 @@ def stationLoginView(request):
         message = 'Invalid username/password'
     return render(request, 'Sbike/station_login.html', {'message' : message})
 
-def morir():
-    return HttpResponse('estas muerto')
 
-#EVITAR REPETIR CODIGO
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------END--STATION--LOGIN-----------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------------LOGOUT------------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+@login_required
+def logoutView(request):
+    logout(request)
+    messages.success(request, 'You have successfully logged out!')
+    return redirect('/weblogin')
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------------LOGOUT------------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------------STATION-PROFILE---------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
 
 @login_required
 def stationProfile(request):
@@ -142,7 +185,6 @@ def stationProfile(request):
         dict = createUserDict(clients[0])
 
         # add extra client info
-        #QUITAR TANTOS [0] Y REEMPLEZARLOS POR UNA VARIABLE
         dict['card_number'] = clients[0].card_number
         dict['exp_date'] = clients[0].expiration_date
         dict['sec_code'] = clients[0].security_code
@@ -153,6 +195,15 @@ def stationProfile(request):
         logout(request)
         messages.error(request, 'Admin/Employee can not login!')
         return redirect('/stationlogin')
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-------------------------------------------------END--STATION-PROFILE---------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###----------------------------------------------------------WEB-PROFILE---------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
 
 @login_required
 def webProfile(request):
@@ -165,14 +216,8 @@ def webProfile(request):
         if len(clients) == 1:
             return clientProfile(request, clients[0])
 
-
-        elif len(admins) == 1 or username == 'admin':
-            if len(admins) == 0:
-                message = 'Usted es el admin de django. PENSAR BIEN ESTA SITUACION'
-                return render(request, 'Sbike/admin_profile.html', {'message' : message})
-            else:
+        elif len(admins) == 1:
                 return adminProfile(request, admins[0])
-
 
         elif len(employees) == 1:
             return employeeProfile(request, employees[0])
@@ -180,7 +225,17 @@ def webProfile(request):
 #Esto que sigue ya no deberia volver a ocurrir.
 #Si alguien lo detecta. Avise!!
         else:
-            return HttpResponse('Error: Hay un usuario logueado inexistente en la base de datos o varios usuarios comparten el mismo username "%s"' % username)
+            messages.error(request, 'Error: Access Denied')
+            return redirect('/home')
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------------END--WEB--PROFILE-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------------PROFILE--FUNCTS---------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
 
 def clientProfile(request, client):
 
@@ -216,58 +271,16 @@ def createUserDict(sbuser):
 
     return dict
 
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------------PROFILE--FUNCTS---------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
 
-@login_required
-def locatorView(request):
-    stations = Station.objects.all()
-    return render(request, 'Sbike/stations.html', {'stations':stations})
 
-def webLoginView(request):
-    if request.user.is_authenticated():
-        return redirect('/webprofile')
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------------LOANS-----------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
 
-    message = ''
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(username=username, password=password)
 
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                return redirect('/webprofile')
-            else:
-                message = 'Inactive User'
-                return render(request, 'login.html', {'message' : message})
-        message = 'Invalid username/password'
-    return render(request, 'Sbike/web_login.html', {'message' : message})
-
-def stationLoginView(request):
-    if request.user.is_authenticated():
-        return redirect('/stationprofile')
-
-    message = ''
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                return redirect('/stationprofile')
-            else:
-                message = 'Inactive User'
-                return render(request, 'login.html', {'message' : message})
-        message = 'Invalid username/password'
-    return render(request, 'Sbike/station_login.html', {'message' : message})
-
-@login_required
-def logoutView(request):
-    logout(request)
-    messages.success(request, 'You have successfully logged out!')
-    return redirect('/weblogin')
-    
 @login_required
 def bikeLoan(request):
     if request.method == 'POST':
@@ -292,6 +305,16 @@ def bikeLoan(request):
         messages.error(request, 'Sorry, No Bikes Available!')
     return render(request, 'Sbike/bike_loan.html', ({'bikes' : bikes}))
 
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------------END--LOANS------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------------GIVE--BACK------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
 @login_required
 def givebackView(request):
     if request.method == 'POST':
@@ -308,3 +331,7 @@ def givebackView(request):
     except ObjectDoesNotExist:
         messages.error(request, 'Sorry! No Loans Outstanding!!')
         return render(request, 'Sbike/give_back.html')
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###---------------------------------------------------END--GIVE--BACK------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
