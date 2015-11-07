@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.shortcuts import redirect
 
-from django.contrib import messages 
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -19,6 +19,7 @@ from .models import Employee
 from .models import Station
 from .models import Bike
 from .models import Loan
+
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###---------------------------------------------------------REGISTER-------------------------------------------------------------------###
@@ -65,13 +66,12 @@ def clientRegisterView(request):
     else:
         form = ClientRegisterForm()
     context = {
-        'form' : form
+        'form': form
     }
     return render(request, 'Sbike/client_register.html', context)
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###----------------------------------------------------END--REGISTER-------------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
-
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -80,7 +80,7 @@ def clientRegisterView(request):
 @login_required
 def locatorView(request):
     stations = Station.objects.all()
-    return render(request, 'Sbike/stations.html', {'stations':stations})
+    return render(request, 'Sbike/stations.html', {'stations': stations})
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###-----------------------------------------------------END--LOCATOR-------------------------------------------------------------------###
@@ -90,8 +90,9 @@ def locatorView(request):
 ###----------------------------------------------------------HOME----------------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
+
 def home(request):
-    return render(request,'Sbike/home.html')
+    return render(request, 'Sbike/home.html')
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###-----------------------------------------------------END--HOME----------------------------------------------------------------------###
@@ -119,9 +120,9 @@ def webLoginView(request):
                 return redirect('/webprofile')
             else:
                 message = 'Inactive User'
-                return render(request, 'login.html', {'message' : message})
+                return render(request, 'login.html', {'message': message})
         message = 'Invalid username/password'
-    return render(request, 'Sbike/web_login.html', {'message' : message})
+    return render(request, 'Sbike/web_login.html', {'message': message})
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###-----------------------------------------------------WEB--LOGIN---------------------------------------------------------------------###
@@ -149,9 +150,9 @@ def stationLoginView(request):
                 return redirect('/stationprofile')
             else:
                 message = 'Inactive User'
-                return render(request, 'login.html', {'message' : message})
+                return render(request, 'login.html', {'message': message})
         message = 'Invalid username/password'
-    return render(request, 'Sbike/station_login.html', {'message' : message})
+    return render(request, 'Sbike/station_login.html', {'message': message})
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -177,6 +178,7 @@ def logoutView(request):
 ###------------------------------------------------------STATION-PROFILE---------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
+
 @login_required
 def stationProfile(request):
     username = request.user.get_username()
@@ -192,7 +194,7 @@ def stationProfile(request):
         dict['sec_code'] = clients[0].security_code
 
         return render(request, 'Sbike/station_profile.html', dict)
-        
+
     else:
         logout(request)
         messages.error(request, 'Admin/Employee can not login!')
@@ -251,15 +253,18 @@ def clientProfile(request, client):
 
     return render(request, 'Sbike/client_profile.html', dict)
 
+
 def adminProfile(request, admin):
 
     dict = createUserDict(admin)
     return render(request, 'Sbike/admin_profile.html', dict)
 
+
 def employeeProfile(request, employee):
 
     dict = createUserDict(employee)
     return render(request, 'Sbike/employee_profile.html', dict)
+
 
 def createUserDict(sbuser):
 
@@ -287,15 +292,17 @@ def createUserDict(sbuser):
 def bikeLoan(request):
     if request.method == 'POST':
 
-        client = Client.objects.get(user = request.user)
+        client = Client.objects.get(user=request.user)
         try:
             bike_id = request.POST.get('select')
             Bike.objects.filter(id=bike_id).update(state='TK')
             bike = Bike.objects.get(id=bike_id)
+            station = Station.objects.get(id=bike.station.id)
+            station.remove_from_stock()
             loan = Loan()
             loan.client = client
             loan.bike = bike
-            loan.save() 
+            loan.save()
 
             messages.success(request, 'Loan: Bike '+str(bike_id))
         except IntegrityError:
@@ -305,7 +312,7 @@ def bikeLoan(request):
     bikes = Bike.objects.filter(state='AV')
     if len(bikes) == 0:
         messages.error(request, 'Sorry, No Bikes Available!')
-    return render(request, 'Sbike/bike_loan.html', ({'bikes' : bikes}))
+    return render(request, 'Sbike/bike_loan.html', ({'bikes': bikes}))
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###--------------------------------------------------------END--LOANS------------------------------------------------------------------###
@@ -322,14 +329,17 @@ def givebackView(request):
     if request.method == 'POST':
         bike_id = request.POST.get('select')
         Bike.objects.filter(id=bike_id).update(state='AV')
+        bike = Bike.objects.get(id=bike_id)
+        station = Station.objects.get(id=bike.station.id)
+        station.add_to_stock()
         Loan.objects.filter(bike=bike_id).delete()
         message = 'Thanks For Return!'
-        return render(request, 'Sbike/give_back.html', {'message' : message})
-    client = Client.objects.get(user = request.user)
+        return render(request, 'Sbike/give_back.html', {'message': message})
+    client = Client.objects.get(user=request.user)
     try:
         loan = Loan.objects.get(client=client)
         bike = Bike.objects.get(id=loan.bike.id)
-        return render(request, 'Sbike/give_back.html', {'bike' : bike})
+        return render(request, 'Sbike/give_back.html', {'bike': bike})
     except ObjectDoesNotExist:
         messages.error(request, 'Sorry! No Loans Outstanding!!')
         return render(request, 'Sbike/give_back.html')
@@ -346,16 +356,16 @@ def givebackView(request):
 
 @login_required
 def clientEditPassword(request):
-    client = Client.objects.get(user = request.user)
+    client = Client.objects.get(user=request.user)
     if request.method == 'POST':
         form = ClientEditPasswordForm(request.POST)
 
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            """comprueba cada campo que no este vacio""" 
+            """comprueba cada campo que no este vacio"""
             """si no lo esta entonces modifica la base"""
-  
-            password = make_password(cleaned_data['password1']) 
+
+            password = make_password(cleaned_data['password1'])
             if password:
                 client.user.password = password
                 messages.success(request, 'Password Changed Successfully')
@@ -363,12 +373,12 @@ def clientEditPassword(request):
                 messages.error(request, 'Error! Password Null!')
             client.user.save()
             return redirect('/weblogin')
-    
+
     form = ClientEditPasswordForm()
     context = {
-        'form' : form
+        'form': form
     }
-    return render(request, 'Sbike/client_edit.html',context)
+    return render(request, 'Sbike/client_edit.html', context)
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -381,16 +391,15 @@ def clientEditPassword(request):
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
 
-
 @login_required
 def clientEditDataPage(request):
-    client = Client.objects.get(user = request.user)
+    client = Client.objects.get(user=request.user)
     if request.method == 'POST':
         form = ClientEditForm(request.POST)
 
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            """comprueba cada campo que no este vacio""" 
+            """comprueba cada campo que no este vacio"""
             """si no lo esta entonces modifica la base"""
             email = cleaned_data.get('email')
             phone_number = cleaned_data.get('phone_number')
@@ -410,16 +419,15 @@ def clientEditDataPage(request):
             if not(security_code is None):
                 client.security_code = security_code
 
-
             client.save()
             client.user.save()
             return redirect('/webprofile')
 
     form = ClientEditForm()
     context = {
-        'form' : form
+        'form': form
     }
-    return render(request, 'Sbike/client_edit.html',context)
+    return render(request, 'Sbike/client_edit.html', context)
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
