@@ -10,8 +10,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 
-from .forms import ClientRegisterForm
-from .forms import ClientEditForm, ClientEditPasswordForm
+from .forms import ClientRegisterForm, ClientEditPhoneForm, ClientEditEmailForm
+from .forms import ClientEditNameForm, ClientEditPasswordForm, ClientEditCardDataForm
 
 from .models import Client
 from .models import Admin
@@ -372,7 +372,7 @@ def clientEditPassword(request):
             else:
                 messages.error(request, 'Error! Password Null!')
             client.user.save()
-            return redirect('/weblogin')
+            return redirect('/webprofile')
 
     form = ClientEditPasswordForm()
     context = {
@@ -387,49 +387,97 @@ def clientEditPassword(request):
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
-###--------------------------------------------------EDIT--CLIENT--DATA----------------------------------------------------------------###
+###------------------------------------------------EDIT--CLIENT--CARD--DATA------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
 
 @login_required
-def clientEditDataPage(request):
+def clientEditCardData(request):
+    
     client = Client.objects.get(user=request.user)
     if request.method == 'POST':
-        form = ClientEditForm(request.POST)
-
+        form = ClientEditCardDataForm(request.POST)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            """comprueba cada campo que no este vacio"""
+            """comprueba cada campo que no este vacio""" 
             """si no lo esta entonces modifica la base"""
-            email = cleaned_data.get('email')
-            phone_number = cleaned_data.get('phone_number')
+            card_number = cleaned_data['card_number']
+            expiration_date = cleaned_data['expiration_date']
+            security_code = cleaned_data['security_code']
 
-            card_number = cleaned_data.get('card_number')
-            expiration_date = cleaned_data.get('expiration_date')
-            security_code = cleaned_data.get('security_code')
-
-            if not(email is None):
-                client.user.email = email
-            if not(phone_number is None):
-                client.phone_number = phone_number
-            if not(card_number is None):
-                client.card_number = card_number
-            if not(expiration_date is None):
-                client.expiration_date = expiration_date
-            if not(security_code is None):
-                client.security_code = security_code
-
+            client.card_number = card_number
+            client.expiration_date = expiration_date
+            client.security_code = security_code
             client.save()
-            client.user.save()
-            return redirect('/webprofile')
-
-    form = ClientEditForm()
+            messages.success(request, 'Successfully Update!')
+            return redirect('/editprofile/card')
+    form = ClientEditCardDataForm()
     context = {
-        'form': form
+        'form' : form
     }
     return render(request, 'Sbike/client_edit.html', context)
 
+###------------------------------------------------------------------------------------------------------------------------------------###
+###---------------------------------------------END--EDIT--CLIENT--CARD--DATA----------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
-###-----------------------------------------------END--EDIT--CLIENT--DATA--------------------------------------------------------------###
+###-------------------------------------------------EDIT--CLIENT--PHONE----------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+@login_required
+def ClientEditPhone(request):
+    client = Client.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        form = ClientEditPhoneForm(request.POST)
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            phone_number = cleaned_data['phone_number']
+            client.phone_number = phone_number
+            client.save()
+            messages.success(request, 'Successfully Update! Phone: '+ str(phone_number))
+            return redirect('/editprofile/phone')
+    
+    form = ClientEditPhoneForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'Sbike/client_edit.html',context)
+
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------END--EDIT--CLIENT--PHONE-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------EDIT--CLIENT--EMAIL---------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+
+@login_required
+def ClientEditEmail(request):
+    client = Client.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        form = ClientEditEmailForm(request.POST)
+        if form.is_valid():
+            email = form.clean_email()
+            client.user.email = email
+            client.user.save()
+            messages.success(request, 'Successfully Update! Email: '+ str(email))
+            return redirect('/editprofile/email')
+    
+    form = ClientEditEmailForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'Sbike/client_edit.html',context)
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------END--EDIT--CLIENT--EMAIL-------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###

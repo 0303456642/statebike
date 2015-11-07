@@ -72,3 +72,24 @@ class ClientEditForm(forms.Form):
         if User.objects.filter(email=email):
             raise forms.ValidationError('Ya se ha registrado ese email')
         return email
+class ClientEditCardDataForm(forms.Form):
+    card_number = forms.IntegerField( widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Card Number'}))
+    expiration_date = forms.DateField( widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}))
+    security_code = forms.IntegerField( widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'xxxx'}))
+
+class ClientEditPhoneForm(forms.Form):
+    phone_number = forms.IntegerField( widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}))
+
+class ClientEditEmailForm(forms.Form):
+    email = forms.EmailField( widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'example@example.com'}))
+    def clean_email(self):
+        """Comprueba que no existe el mismo email en la db"""
+        """si el email esta vacio no comprueba nada"""
+        email = self.cleaned_data['email']
+        if not(email is None) and User.objects.filter(email=email):
+            raise forms.ValidationError('Ya se ha registrado ese email')
+        return email
+
+class ClientEditNameForm(forms.Form):
+    first_name = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}))
+    last_name = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}))
