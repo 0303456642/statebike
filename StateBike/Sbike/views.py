@@ -93,6 +93,7 @@ def locatorView(request):
 
 
 def home(request):
+    logout(request)
     return render(request, 'Sbike/home.html')
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -103,19 +104,6 @@ def home(request):
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###-----------------------------------------------------WEB--LOGIN---------------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
-
-def get_random_station():
-    # asignar una estacion random
-    stations = Station.objects.all()
-    chosen = randint(0,len(stations) - 1)
-
-    # seleccionar la estacion i-esima
-    i = 0
-    for st in stations:
-        if i == chosen:
-            break
-        i = i + 1
-    return st.id
 
 def webLoginView(request):
     if request.user.is_authenticated():
@@ -130,7 +118,7 @@ def webLoginView(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                request.session['station'] = get_random_station()
+                request.session['type'] = 'web'
                 return redirect('/webprofile')
             else:
                 message = 'Inactive User'
@@ -147,6 +135,18 @@ def webLoginView(request):
 ###-----------------------------------------------------STATION--LOGIN-----------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
+def get_random_station():
+    # asignar una estacion random
+    stations = Station.objects.all()
+    chosen = randint(0,len(stations) - 1)
+
+    # seleccionar la estacion i-esima
+    i = 0
+    for st in stations:
+        if i == chosen:
+            break
+        i = i + 1
+    return st.id
 
 def stationLoginView(request):
     if request.user.is_authenticated():
@@ -161,6 +161,8 @@ def stationLoginView(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
+                request.session['station'] = get_random_station()
+                request.session['type'] = 'station'
                 return redirect('/stationprofile')
             else:
                 message = 'Inactive User'
@@ -180,10 +182,13 @@ def stationLoginView(request):
 
 @login_required
 def logoutView(request):
-    logout(request)
+    
     messages.success(request, 'You have successfully logged out!')
+    s_type = request.session['type']
+    logout(request)
+    if (s_type == 'station'): 
+        return redirect('/stationlogin')
     return redirect('/weblogin')
-
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###------------------------------------------------------LOGOUT------------------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
