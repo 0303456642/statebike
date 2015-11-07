@@ -30,6 +30,10 @@ urlpatterns = [
     url(r'^stationprofile/$', views.stationProfile),
     url(r'^editprofile/$', views.clientEditDataPage),
     url(r'^editpassword/$', views.clientEditPassword),
+    url(r'^editprofile/name$', views.ClientEditName),
+    url(r'^editprofile/card$', views.clientEditCardData),
+    url(r'^editprofile/phone$', views.ClientEditPhone),
+    url(r'^editprofile/email$', views.ClientEditEmail),
     url(r'^webprofile/$', views.webProfile),
     url(r'^bikeloan/$', views.bikeLoan),
     url(r'^giveback/$', views.givebackView)

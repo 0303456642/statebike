@@ -10,8 +10,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 
-from .forms import ClientRegisterForm
-from .forms import ClientEditForm, ClientEditPasswordForm
+from .forms import ClientRegisterForm, ClientEditPhoneForm, ClientEditEmailForm
+from .forms import ClientEditNameForm, ClientEditPasswordForm, ClientEditCardDataForm
 
 from .models import Client
 from .models import Admin
@@ -387,49 +387,148 @@ def clientEditPassword(request):
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
-###--------------------------------------------------EDIT--CLIENT--DATA----------------------------------------------------------------###
+###------------------------------------------------EDIT--CLIENT--CARD--DATA------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
 
 @login_required
-def clientEditDataPage(request):
-    client = Client.objects.get(user=request.user)
+def clientEditCardData(request):
+    name = request.user.get_username()
+    current = Client.objects.get(user__username = name)
     if request.method == 'POST':
-        form = ClientEditForm(request.POST)
-
+        form = ClientEditCardDataForm(request.POST)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            """comprueba cada campo que no este vacio"""
+            """comprueba cada campo que no este vacio""" 
             """si no lo esta entonces modifica la base"""
-            email = cleaned_data.get('email')
-            phone_number = cleaned_data.get('phone_number')
+            card_number = cleaned_data['card_number']
+            expiration_date = cleaned_data['expiration_date']
+            security_code = cleaned_data['security_code']
 
-            card_number = cleaned_data.get('card_number')
-            expiration_date = cleaned_data.get('expiration_date')
-            security_code = cleaned_data.get('security_code')
-
-            if not(email is None):
-                client.user.email = email
-            if not(phone_number is None):
-                client.phone_number = phone_number
-            if not(card_number is None):
-                client.card_number = card_number
-            if not(expiration_date is None):
-                client.expiration_date = expiration_date
-            if not(security_code is None):
-                client.security_code = security_code
-
-            client.save()
-            client.user.save()
+            current.card_number = card_number
+            current.expiration_date = expiration_date
+            current.security_code = security_code
+            current.save()
             return redirect('/webprofile')
-
-    form = ClientEditForm()
+    form = ClientEditCardDataForm()
     context = {
-        'form': form
+        'form' : form
     }
-    return render(request, 'Sbike/client_edit.html', context)
+    return render(request, 'Sbike/client_edit.html',context)
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###---------------------------------------------END--EDIT--CLIENT--CARD--DATA----------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
-###-----------------------------------------------END--EDIT--CLIENT--DATA--------------------------------------------------------------###
+###-------------------------------------------------EDIT--CLIENT--PHONE----------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+@login_required
+def ClientEditPhone(request):
+    name = request.user.get_username()
+    current = Client.objects.get(user__username = name)
+    if request.method == 'POST':
+        form = ClientEditPhoneForm(request.POST)
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            phone_number = cleaned_data['phone_number']
+            current.phone_number = phone_number
+            current.save()
+            return redirect('/webprofile')
+    
+    form = ClientEditPhoneForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'Sbike/client_edit.html',context)
+
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------END--EDIT--CLIENT--PHONE-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------EDIT--CLIENT--EMAIL---------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+
+@login_required
+def ClientEditEmail(request):
+    name = request.user.get_username()
+    current = Client.objects.get(user__username = name)
+    if request.method == 'POST':
+        form = ClientEditEmailForm(request.POST)
+        if form.is_valid():
+            email = form.clean_email()
+            current.user.email = email
+            current.user.save()
+            return redirect('/webprofile')
+    
+    form = ClientEditEmailForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'Sbike/client_edit.html',context)
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------END--EDIT--CLIENT--EMAIL-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------EDIT--CLIENT--NAME-----------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+def ClientEditName(request):
+    name = request.user.get_username()
+    current = Client.objects.get(user__username = name)
+    if request.method == 'POST':
+        form = ClientEditNameForm(request.POST)
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            first_name = cleaned_data['first_name']
+            last_name = cleaned_data['last_name']
+
+            current.user.first_name = first_name
+            current.user.last_name = last_name
+            current.user.save()
+            return redirect('/webprofile')
+    
+    form = ClientEditNameForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'Sbike/client_edit.html',context)
+
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------END--EDIT--CLIENT--NAME---------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------EDIT--CLIENT--PAGE----------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+@login_required
+def clientEditDataPage(request):
+    name = request.user.get_username()
+    current = Client.objects.get(user__username = name)
+    if not(current is None):
+        # create basic info dict
+        dict = createUserDict(current)
+
+        # add extra client info
+        dict['card_number'] = current.card_number
+        dict['exp_date'] = current.expiration_date
+        dict['sec_code'] = current.security_code
+
+    return render(request, 'Sbike/client_what_edit.html', dict)
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------END--EDIT--CLIENT--PAGE--------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
