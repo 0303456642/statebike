@@ -40,9 +40,11 @@ class Station(models.Model):
 
     def remove_from_stock(self):
         self.stock = self.stock - 1
+        self.save()
 
     def add_to_stock(self):
         self.stock = self.stock + 1
+        self.save()
 
 
 class Bike(models.Model):
@@ -67,12 +69,15 @@ class Bike(models.Model):
 
     def take(self):
         self.state = 'TK'
+        self.save()
 
     def repair(self):
         self.state = 'AV'
+        self.save()
 
     def give_back(self):
         self.state = 'AV'
+        self.save()
 
 
 class Loan(models.Model):
@@ -85,5 +90,5 @@ class Loan(models.Model):
     def __str__(self):
         return "Loan: " + str(self.id)
 
-    def eval_penalty(self):
+    def eval_sanction(self):
         pass
