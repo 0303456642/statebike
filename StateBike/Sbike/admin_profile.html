@@ -1,0 +1,23 @@
+{% extends 'Sbike/base.html' %}
+
+{% block title %} Admin Profile {% endblock title %}
+
+{% block content %}
+    {% if message %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endif %}
+
+<h1>Admin Profile of {{ username }} </h1>
+<hr />
+<h2>Personal Data</h2>
+<hr />
+<ul>
+  <li>Name: {{ fname }} {{ lname }}</li>
+  <li>DNI: {{ dni }}</li>
+  <li>Phone Number: {{ phone }}</li>
+  <li>Email: {{ email }}</li>
+</ul>
+
+{% endblock content %}

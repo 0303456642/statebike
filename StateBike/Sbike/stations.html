@@ -1,0 +1,21 @@
+{% extends 'Sbike/base.html' %}
+
+{% block title %} Stations {% endblock title %}
+
+{% block content %}
+    <h1>List of Stations</h1>
+        <table class="table table-hover" border="0" align="center">
+            <tr>
+	        <td><b>Name</b></td>
+	        <td><b>Address</b></td>
+	        <td><b>Bikes in stock</b></td>
+	        {% for st in stations %}
+            </tr>
+	    <td>{{st.name}}</td>
+	    <td>{{st.address}}</td>
+	    <td>{{st.stock}}</td>
+            <tr>
+	        {% endfor %}
+            </tr>
+        </table>
+{% endblock content %}
