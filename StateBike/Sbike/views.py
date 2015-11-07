@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages 
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 
 from .forms import ClientRegisterForm
 
@@ -66,8 +67,8 @@ def locatorView(request):
     stations = Station.objects.all()
     return render(request, 'Sbike/stations.html', {'stations':stations})
 
-def homePrinc(request):
-    return render(request,'Sbike/homePrinc.html')
+def home(request):
+    return render(request,'Sbike/home.html')
 
 @login_required
 def bikeLoan(request):
@@ -268,19 +269,42 @@ def logoutView(request):
     return redirect('/weblogin')
     
 @login_required
-def givebackView(request):
-	current_user = request.user
-	current_client = Client.objects.get(user = current_user)
-	try:
-		loan = Loan.objects.get(client=current_client)
-	except ObjectDoesNotExist:
-		loan = None
-	if loan is None:
-		message = 'Se ha producido un error'
-	else:
-		bike = Bike.objects.get(bike=loan.bike)
-		
-		loan.delete()
-		message = 'La bicicleta fue devuelta correctamente!'
+def bikeLoan(request):
+    if request.method == 'POST':
 
-	return render(request, 'Sbike/give_back.html', {'message' : message})
+        client = Client.objects.get(user = request.user)
+        try:
+            bike_id = request.POST.get('select')
+            Bike.objects.filter(id=bike_id).update(state='TK')
+            bike = Bike.objects.get(id=bike_id)
+            loan = Loan()
+            loan.client = client
+            loan.bike = bike
+            loan.save() 
+
+            messages.success(request, 'Loan: Bike '+str(bike_id))
+        except IntegrityError:
+            messages.error(request, 'Sorry, You Have An Outstanding Loan')
+        finally:
+            return redirect('/stationprofile')
+    bikes = Bike.objects.filter(state='AV')
+    if len(bikes) == 0:
+        messages.error(request, 'Sorry, No Bikes Available!')
+    return render(request, 'Sbike/bike_loan.html', ({'bikes' : bikes}))
+
+@login_required
+def givebackView(request):
+    if request.method == 'POST':
+        bike_id = request.POST.get('select')
+        Bike.objects.filter(id=bike_id).update(state='AV')
+        Loan.objects.filter(bike=bike_id).delete()
+        message = 'Thanks For Return!'
+        return render(request, 'Sbike/give_back.html', {'message' : message})
+    client = Client.objects.get(user = request.user)
+    try:
+        loan = Loan.objects.get(client=client)
+        bike = Bike.objects.get(id=loan.bike.id)
+        return render(request, 'Sbike/give_back.html', {'bike' : bike})
+    except ObjectDoesNotExist:
+        messages.error(request, 'Sorry! No Loans Outstanding!!')
+        return render(request, 'Sbike/give_back.html')
