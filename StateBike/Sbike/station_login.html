@@ -5,13 +5,14 @@
 {% block content %}
     <div class="row">
         <div class="col-md-4 col-md-offset-4">
+            <center>
             <div class="page-header"><h2>Station Login</h2></div>
             {% if message %}
                 <div class="alert alert-danger">
                     {{ message }}
                 </div>
             {% endif %}
-
+            </center>
             <form method="post" action="">
                 {% csrf_token %}
                 <div class="form-group">

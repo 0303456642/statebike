@@ -5,6 +5,7 @@
 {% block content %}
     <div class="row">
         <div class="col-md-4 col-md-offset-4">
+            <center>
             <div class="page-header"><h2>Web Login</h2></div>
             {% if message %}
                 <div class="alert alert-danger">
@@ -12,8 +13,9 @@
                 </div>
             {% endif %}
             <div>
-                <img src="/static/img/bike3.png" alt="texto descriptivo">
+                <img src="/static/img/bike4.png" alt="texto descriptivo">
             </div>
+            </center>
             <form method="post" action="">
                 {% csrf_token %}
                 <div class="form-group">
