@@ -28,6 +28,8 @@ urlpatterns = [
     url(r'^register/$', views.clientRegisterView, name='client_register'),
     url(r'^stations/$', views.locatorView),
     url(r'^stationprofile/$', views.stationProfile),
+    url(r'^editprofile/$', views.clientEditDataPage),
+    url(r'^editpassword/$', views.clientEditPassword),
     url(r'^webprofile/$', views.webProfile),
     url(r'^bikeloan/$', views.bikeLoan),
     url(r'^giveback/$', views.givebackView)

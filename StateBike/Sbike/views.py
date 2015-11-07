@@ -5,11 +5,13 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 
 from .forms import ClientRegisterForm
+from .forms import ClientEditForm, ClientEditPasswordForm
 
 from .models import Client
 from .models import Admin
@@ -334,4 +336,92 @@ def givebackView(request):
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###---------------------------------------------------END--GIVE--BACK------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###---------------------------------------------------EDIT---PASSWORD------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+@login_required
+def clientEditPassword(request):
+    client = Client.objects.get(user = request.user)
+    if request.method == 'POST':
+        form = ClientEditPasswordForm(request.POST)
+
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            """comprueba cada campo que no este vacio""" 
+            """si no lo esta entonces modifica la base"""
+  
+            password = make_password(cleaned_data['password1']) 
+            if password:
+                client.user.password = password
+                messages.success(request, 'Password Changed Successfully')
+            else:
+                messages.error(request, 'Error! Password Null!')
+            client.user.save()
+            return redirect('/weblogin')
+    
+    form = ClientEditPasswordForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'Sbike/client_edit.html',context)
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-------------------------------------------------END--EDIT--PASSWORD----------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------EDIT--CLIENT--DATA----------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+
+@login_required
+def clientEditDataPage(request):
+    client = Client.objects.get(user = request.user)
+    if request.method == 'POST':
+        form = ClientEditForm(request.POST)
+
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            """comprueba cada campo que no este vacio""" 
+            """si no lo esta entonces modifica la base"""
+            email = cleaned_data.get('email')
+            phone_number = cleaned_data.get('phone_number')
+
+            card_number = cleaned_data.get('card_number')
+            expiration_date = cleaned_data.get('expiration_date')
+            security_code = cleaned_data.get('security_code')
+
+            if not(email is None):
+                client.user.email = email
+            if not(phone_number is None):
+                client.phone_number = phone_number
+            if not(card_number is None):
+                client.card_number = card_number
+            if not(expiration_date is None):
+                client.expiration_date = expiration_date
+            if not(security_code is None):
+                client.security_code = security_code
+
+
+            client.save()
+            client.user.save()
+            return redirect('/webprofile')
+
+    form = ClientEditForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'Sbike/client_edit.html',context)
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###-----------------------------------------------END--EDIT--CLIENT--DATA--------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
