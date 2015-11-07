@@ -20,6 +20,7 @@ from .models import Station
 from .models import Bike
 from .models import Loan
 
+from random import randint # para las estaciones
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###---------------------------------------------------------REGISTER-------------------------------------------------------------------###
@@ -103,6 +104,18 @@ def home(request):
 ###-----------------------------------------------------WEB--LOGIN---------------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
+def get_random_station():
+    # asignar una estacion random
+    stations = Station.objects.all()
+    chosen = randint(0,len(stations) - 1)
+
+    # seleccionar la estacion i-esima
+    i = 0
+    for st in stations:
+        if i == chosen:
+            break
+        i = i + 1
+    return st.id
 
 def webLoginView(request):
     if request.user.is_authenticated():
@@ -117,6 +130,7 @@ def webLoginView(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
+                request.session['station'] = get_random_station()
                 return redirect('/webprofile')
             else:
                 message = 'Inactive User'
@@ -295,21 +309,24 @@ def bikeLoan(request):
         client = Client.objects.get(user=request.user)
         try:
             bike_id = request.POST.get('select')
-            Bike.objects.filter(id=bike_id).update(state='TK')
             bike = Bike.objects.get(id=bike_id)
             station = Station.objects.get(id=bike.station.id)
-            station.remove_from_stock()
             loan = Loan()
             loan.client = client
             loan.bike = bike
             loan.save()
+
+            # update data base after possible exception
+            Bike.objects.filter(id=bike_id).update(state='TK')
+            station.remove_from_stock()
 
             messages.success(request, 'Loan: Bike '+str(bike_id))
         except IntegrityError:
             messages.error(request, 'Sorry, You Have An Outstanding Loan')
         finally:
             return redirect('/stationprofile')
-    bikes = Bike.objects.filter(state='AV')
+    bikes = Bike.objects.filter(state='AV',
+                                station_id=request.session['station'])
     if len(bikes) == 0:
         messages.error(request, 'Sorry, No Bikes Available!')
     return render(request, 'Sbike/bike_loan.html', ({'bikes': bikes}))
@@ -323,7 +340,6 @@ def bikeLoan(request):
 ###--------------------------------------------------------GIVE--BACK------------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
-
 @login_required
 def givebackView(request):
     if request.method == 'POST':
@@ -335,6 +351,11 @@ def givebackView(request):
         Loan.objects.filter(bike=bike_id).delete()
         message = 'Thanks For Return!'
         return render(request, 'Sbike/give_back.html', {'message': message})
+    # check if there is capacity available
+    stationWhereIam = Station.objects.get(id=request.session['station'])
+    if stationWhereIam.stock >= stationWhereIam.capacity:
+        messages.error(request, 'Sorry! There is no capacity in the station %s' % stationWhereIam.name)
+        return render(request, 'Sbike/give_back.html')
     client = Client.objects.get(user=request.user)
     try:
         loan = Loan.objects.get(client=client)
