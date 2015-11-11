@@ -19,8 +19,11 @@ from .models import Employee
 from .models import Station
 from .models import Bike
 from .models import Loan
+from .models import Sanction
 
 from random import randint # para las estaciones
+from datetime import datetime, timedelta
+
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###---------------------------------------------------------REGISTER-------------------------------------------------------------------###
@@ -56,11 +59,9 @@ def clientRegisterView(request):
             client.user = user
             client.phone_number = phone_number
             client.dni = dni
-            client.card_number = card_number
-            client.expiration_date = expiration_date
-            client.security_code = security_code
 
-            client.save()
+            client.edit_card(card_number, expiration_date, security_code)
+
             messages.success(request, 'You Have Successfully Registered')
             return redirect('/weblogin')
 
@@ -317,9 +318,7 @@ def bikeLoan(request):
             bike = Bike.objects.get(id=bike_id)
             station = Station.objects.get(id=bike.station.id)
             loan = Loan()
-            loan.client = client
-            loan.bike = bike
-            loan.save()
+            loan.create_loan(client, bike)
 
             # update data base after possible exception
             Bike.objects.filter(id=bike_id).update(state='TK')
@@ -347,19 +346,29 @@ def bikeLoan(request):
 
 @login_required
 def givebackView(request):
+    station = Station.objects.get(id=request.session['station'])
     if request.method == 'POST':
         bike_id = request.POST.get('select')
         Bike.objects.filter(id=bike_id).update(state='AV')
         bike = Bike.objects.get(id=bike_id)
-        station = Station.objects.get(id=bike.station.id)
         station.add_to_stock()
-        Loan.objects.filter(bike=bike_id).delete()
+
+        loan = Loan.objects.get(bike=bike_id)
+        loan.set_end_date()
+        days = loan.eval_sanction()
+
+        if days > 0:
+            sanction = Sanction()
+            sanction.create_sanction(loan, days)
+        else:
+            Loan.objects.filter(bike=bike_id).delete()
+
         message = 'Thanks For Return!'
         return render(request, 'Sbike/give_back.html', {'message': message})
+
     # check if there is capacity available
-    stationWhereIam = Station.objects.get(id=request.session['station'])
-    if stationWhereIam.stock >= stationWhereIam.capacity:
-        messages.error(request, 'Sorry! There is no capacity in the station %s' % stationWhereIam.name)
+    if station.stock >= station.capacity:
+        messages.error(request, 'Sorry! There is no capacity in the station %s' % station.name)
         return render(request, 'Sbike/give_back.html')
     client = Client.objects.get(user=request.user)
     try:
@@ -431,10 +440,8 @@ def clientEditCardData(request):
             expiration_date = cleaned_data['expiration_date']
             security_code = cleaned_data['security_code']
 
-            client.card_number = card_number
-            client.expiration_date = expiration_date
-            client.security_code = security_code
-            client.save()
+            client.edit_card(card_number, expiration_date, security_code)
+
             messages.success(request, 'Successfully Update!')
             return redirect('/editprofile/card')
     form = ClientEditCardDataForm()
@@ -461,8 +468,7 @@ def ClientEditPhone(request):
         if form.is_valid():
             cleaned_data = form.cleaned_data
             phone_number = cleaned_data['phone_number']
-            client.phone_number = phone_number
-            client.save()
+            client.edit_phone(phone_number)
             messages.success(request, 'Successfully Update! Phone: '+ str(phone_number))
             return redirect('/editprofile/phone')
     
@@ -492,8 +498,7 @@ def ClientEditEmail(request):
         form = ClientEditEmailForm(request.POST)
         if form.is_valid():
             email = form.clean_email()
-            client.user.email = email
-            client.user.save()
+            client.edit_email(email)
             messages.success(request, 'Successfully Update! Email: '+ str(email))
             return redirect('/editprofile/email')
     
