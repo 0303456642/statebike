@@ -343,14 +343,16 @@ def bikeLoan(request):
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###--------------------------------------------------------GIVE--BACK------------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
+class SanctionExist(Exception):
+    pass
+
 
 @login_required
 def givebackView(request):
     station = Station.objects.get(id=request.session['station'])
     if request.method == 'POST':
         bike_id = request.POST.get('select')
-        Bike.objects.filter(id=bike_id).update(state='AV')
-        bike = Bike.objects.get(id=bike_id)
+
         station.add_to_stock()
 
         loan = Loan.objects.get(bike=bike_id)
@@ -363,6 +365,7 @@ def givebackView(request):
         else:
             Loan.objects.filter(bike=bike_id).delete()
 
+        Bike.objects.filter(id=bike_id).update(state='AV')
         message = 'Thanks For Return!'
         return render(request, 'Sbike/give_back.html', {'message': message})
 
@@ -372,9 +375,16 @@ def givebackView(request):
         return render(request, 'Sbike/give_back.html')
     client = Client.objects.get(user=request.user)
     try:
+        # check if a sanction exists
+        if (Sanction.objects.filter(client=client).first()) != None:
+            raise SanctionExist
+
         loan = Loan.objects.get(client=client)
         bike = Bike.objects.get(id=loan.bike.id)
         return render(request, 'Sbike/give_back.html', {'bike': bike})
+    except SanctionExist:
+        messages.error(request, 'Sorry! A Sanction is Pending')
+        return render(request, 'Sbike/give_back.html')
     except ObjectDoesNotExist:
         messages.error(request, 'Sorry! No Loans Outstanding!!')
         return render(request, 'Sbike/give_back.html')

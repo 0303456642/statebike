@@ -130,6 +130,7 @@ class Loan(models.Model):
 
 
 class Sanction(models.Model):
+    client = models.OneToOneField(Client)
     loan = models.OneToOneField(Loan)
     amount = models.DecimalField(
         max_digits=6, decimal_places=2, null=True, blank=True)
@@ -139,7 +140,8 @@ class Sanction(models.Model):
 
     def create_sanction(self, loan, days):
         self.loan = loan
-        self.is_minor = days < 1
+        self.client = self.loan.client
+        self.is_minor = days == 1
         self.date = self.loan.endDate
         self.save()
 
