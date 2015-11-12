@@ -148,3 +148,11 @@ class Sanction(models.Model):
     def generate_deposition(self, deposition):
         self.deposition = deposition
         self.save()
+
+class Notification(models.Model):
+    station = models.OneToOneField(Station)
+    date = models.DateTimeField(default=datetime.now)
+
+    def add_station(self, station):
+        self.station = station
+        self.save()
