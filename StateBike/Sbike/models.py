@@ -148,3 +148,7 @@ class Sanction(models.Model):
     def generate_deposition(self, deposition):
         self.deposition = deposition
         self.save()
+
+class Notification(models.Model):
+    sanction = models.OneToOneField(Sanction)
+    date = models.DateTimeField(blank=False)
