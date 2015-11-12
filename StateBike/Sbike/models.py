@@ -151,7 +151,7 @@ class Sanction(models.Model):
 
 class Notification(models.Model):
     station = models.OneToOneField(Station)
-    date = models.DateTimeField(blank=False, default=datetime.now)
+    date = models.DateTimeField(default=datetime.now)
 
     def add_station(self, station):
         self.station = station
