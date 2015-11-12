@@ -150,5 +150,5 @@ class Sanction(models.Model):
         self.save()
 
 class Notification(models.Model):
-    sanction = models.OneToOneField(Sanction)
+    station = models.OneToOneField(Station)
     date = models.DateTimeField(blank=False)
