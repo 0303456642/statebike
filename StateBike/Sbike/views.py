@@ -531,21 +531,24 @@ def ClientEditEmail(request):
 
 @login_required
 def setBikeStatus(request):
+    try:
+        context = dict()
+        context['brokenbikes'] = Bike.objects.filter(state = 'BR')
+    except Bike.DoesNotExist:
+        messages.error(request, 'no are bikes here')
     if request.method == 'POST':
+        bike_id = request.POST.get('bike_id')
         try:
-            user = Employee.objects.get(user=request.user)
-            bike_id = request.POST.get('bike_id')
-            status = request.POST.get('status')
-            try:
-                bike = Bike.objects.get(id = bike_id)
-                bike.state = status
-                bike.save()
-            except Bike.DoesNotExist:
-                messages.error(request, 'that bike not exist!')
-            return redirect('/stations')
-        except Employee.DoesNotExist:
-            messages.error(request, 'You not have permissions to perform this action')
-    return render(request, 'Sbike/set_bike_status.html')
+            bike = Bike.objects.get(id = bike_id)
+            bike.state = 'AV'
+            bike.save()
+            messages.success(request, 'bike repaired!')
+        except Bike.DoesNotExist:
+            messages.error(request, 'that bike not exist!')
+#            return redirect('/stations')
+#        except Employee.DoesNotExist:
+#            messages.error(request, 'You not have permissions to perform this action')
+    return render(request, 'Sbike/set_bike_status.html', context)
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###----------------------------------------------------END-SET-BIKE-STATUS-------------------------------------------------------------###
