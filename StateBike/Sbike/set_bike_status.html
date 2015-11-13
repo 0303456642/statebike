@@ -1,0 +1,23 @@
+{% extends 'Sbike/base.html' %}
+
+{% block title %}Status de Bicicleta{% endblock title %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6 col-sm-offset-3">
+            <div class="page-header">
+                <h2>Cambiar Status</h2>
+            </div>
+           <form method="post" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                <input type="text" id="status" name="status" class="form-control" >
+
+                <input name="status" type="radio" value="AVAILABLE" checked="checked" />AVAILABLE<br>
+                <input name="status" type="radio" value="TAKEN" />TAKEN<br>
+                <input name="status" type="radio" value="BROKEN" />BROKEN<br>
+                <button type="submit" class="btn btn-primary">modificar estado</button>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
