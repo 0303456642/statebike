@@ -11,11 +11,11 @@
            <form method="post" action="">
                 {% csrf_token %}
                 <div class="form-group">
-                <input type="text" id="status" name="status" class="form-control" >
+                <input type="text" id="bike_id" name="bike_id" class="form-control" >
 
-                <input name="status" type="radio" value="AVAILABLE" checked="checked" />AVAILABLE<br>
-                <input name="status" type="radio" value="TAKEN" />TAKEN<br>
-                <input name="status" type="radio" value="BROKEN" />BROKEN<br>
+                <input name="status" type="radio" value="AV" checked="checked" />AVAILABLE<br>
+                <input name="status" type="radio" value="TK" />TAKEN<br>
+                <input name="status" type="radio" value="BR" />BROKEN<br>
                 <button type="submit" class="btn btn-primary">modificar estado</button>
             </form>
         </div>
