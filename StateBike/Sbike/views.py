@@ -11,7 +11,8 @@ from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 
 from .forms import ClientRegisterForm, ClientEditPhoneForm, ClientEditEmailForm
-from .forms import ClientEditNameForm, ClientEditPasswordForm, ClientEditCardDataForm
+from .forms import ClientEditNameForm, ClientEditPasswordForm
+from .forms import ClientEditCardDataForm, CreateStationForm
 
 from itertools import chain
 
@@ -24,8 +25,7 @@ from .models import Loan
 from .models import Sanction
 from .models import Notification
 
-from random import randint # para las estaciones
-from datetime import datetime, timedelta
+from random import randint  #para las estaciones
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -123,6 +123,12 @@ def webLoginView(request):
             if user.is_active:
                 login(request, user)
                 request.session['type'] = 'web'
+                if Admin.objects.filter(user=user).first() is not None:
+                    request.session['user_type'] = 'admin'
+                elif Employee.objects.filter(user=user).first() is not None:
+                    request.session['user_type'] = 'employee'
+                else:
+                    request.session['user_type'] = 'client'
                 return redirect('/webprofile')
             else:
                 message = 'Inactive User'
@@ -142,7 +148,7 @@ def webLoginView(request):
 def get_random_station():
     # asignar una estacion random
     stations = Station.objects.all()
-    chosen = randint(0,len(stations) - 1)
+    chosen = randint(0, len(stations) - 1)
 
     # seleccionar la estacion i-esima
     i = 0
@@ -151,6 +157,7 @@ def get_random_station():
             break
         i = i + 1
     return st.id
+
 
 def stationLoginView(request):
     if request.user.is_authenticated():
@@ -186,11 +193,11 @@ def stationLoginView(request):
 
 @login_required
 def logoutView(request):
-    
+
     messages.success(request, 'You have successfully logged out!')
     s_type = request.session['type']
     logout(request)
-    if (s_type == 'station'): 
+    if (s_type == 'station'):
         return redirect('/stationlogin')
     return redirect('/weblogin')
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -379,7 +386,7 @@ def givebackView(request):
     client = Client.objects.get(user=request.user)
     try:
         # check if a sanction exists
-        if (Sanction.objects.filter(client=client).first()) != None:
+        if (Sanction.objects.filter(client=client).first()) is not None:
             raise SanctionExist
 
         loan = Loan.objects.get(client=client)
@@ -441,13 +448,13 @@ def clientEditPassword(request):
 
 @login_required
 def clientEditCardData(request):
-    
+
     client = Client.objects.get(user=request.user)
     if request.method == 'POST':
         form = ClientEditCardDataForm(request.POST)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            """comprueba cada campo que no este vacio""" 
+            """comprueba cada campo que no este vacio"""
             """si no lo esta entonces modifica la base"""
             card_number = cleaned_data['card_number']
             expiration_date = cleaned_data['expiration_date']
@@ -459,14 +466,13 @@ def clientEditCardData(request):
             return redirect('/editprofile/card')
     form = ClientEditCardDataForm()
     context = {
-        'form' : form
+        'form': form
     }
     return render(request, 'Sbike/client_edit.html', context)
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###---------------------------------------------END--EDIT--CLIENT--CARD--DATA----------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
-
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -482,15 +488,14 @@ def ClientEditPhone(request):
             cleaned_data = form.cleaned_data
             phone_number = cleaned_data['phone_number']
             client.edit_phone(phone_number)
-            messages.success(request, 'Successfully Update! Phone: '+ str(phone_number))
+            messages.success(request, 'Successfully Update! Phone: ' + str(phone_number))
             return redirect('/editprofile/phone')
-    
+
     form = ClientEditPhoneForm()
     context = {
-        'form' : form
+        'form': form
     }
-    return render(request, 'Sbike/client_edit.html',context)
-
+    return render(request, 'Sbike/client_edit.html', context)
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -502,7 +507,6 @@ def ClientEditPhone(request):
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
 
-
 @login_required
 def ClientEditEmail(request):
     client = Client.objects.get(user=request.user)
@@ -512,14 +516,14 @@ def ClientEditEmail(request):
         if form.is_valid():
             email = form.clean_email()
             client.edit_email(email)
-            messages.success(request, 'Successfully Update! Email: '+ str(email))
+            messages.success(request, 'Successfully Update! Email: ' + str(email))
             return redirect('/editprofile/email')
-    
+
     form = ClientEditEmailForm()
     context = {
-        'form' : form
+        'form': form
     }
-    return render(request, 'Sbike/client_edit.html',context)
+    return render(request, 'Sbike/client_edit.html', context)
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -535,16 +539,16 @@ def ClientEditEmail(request):
 def setBikeStatus(request):
     try:
         #ver si es realmente un empleado
-        SMaster = Employee.objects.get(user = request.user)
+        SMaster = Employee.objects.get(user=request.user)
         #obtener todas las estaciones a cargo del empleado
-        Stations = Station.objects.filter(employee = SMaster)
+        Stations = Station.objects.filter(employee=SMaster)
         # ahora viene la pesada
         #obtener solo las bicis rotas que estan en estaciones a cargo del empleado
         try:
             context = dict()
-            context['brokenbikes'] = []    
+            context['brokenbikes'] = []
             for S in Stations:
-                filterargs = { 'state': 'BR', 'station': S }
+                filterargs = {'state': 'BR', 'station': S}
                 #si alguien consigue que chain funcione nos ahorra 600% de memoria
                 broken = Bike.objects.filter(**filterargs)
                 context['brokenbikes'] = context['brokenbikes'] + list(broken)
@@ -553,17 +557,66 @@ def setBikeStatus(request):
         if request.method == 'POST':
             bike_id = request.POST.get('bike_id')
             try:
-                bike = Bike.objects.get(id = bike_id)
+                bike = Bike.objects.get(id=bike_id)
                 bike.state = 'AV'
                 bike.save()
                 messages.success(request, 'bike repaired!')
             except Bike.DoesNotExist:
                 messages.error(request, 'that bike not exist!')
-        return render(request, 'Sbike/set_bike_status.html', context)        
+        return render(request, 'Sbike/set_bike_status.html', context)
     except Employee.DoesNotExist:
         messages.error(request, 'You not have permissions to perform this action')
         return redirect('/stationprofile')
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###----------------------------------------------------END-SET-BIKE-STATUS-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------CREATE--STATION-------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+@login_required
+def createStation(request):
+    user_type = request.session['user_type']
+
+    if user_type == 'admin':
+        if request.method == 'POST':
+            employee_dni = request.POST.get('select')
+            employee = Employee.objects.get(dni=employee_dni)
+            form = CreateStationForm(request.POST)
+            if form.is_valid():
+                cleaned_data = form.cleaned_data
+                name = cleaned_data['name']
+                address = cleaned_data['address']
+                stock = cleaned_data['stock']
+                capacity = cleaned_data['capacity']
+
+                station = Station()
+                station.create_station(employee, name, address, stock, capacity)
+                messages.success(request, 'Station Successfully Created!')
+
+                return redirect('/webprofile')
+
+        employees = Employee.objects.all()
+
+        if not employees.exists():
+            messages.error(request, 'No registered Employee!')
+            return redirect('/webprofile')
+
+        form = CreateStationForm()
+        context = {
+            'form': form,
+            'employees': employees
+        }
+
+        return render(request, 'Sbike/create_station.html', context)
+
+    else:
+        messages.error(request, 'This Content is Unavailable!')
+        return redirect('/webprofile')
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------END--CREATE--STATION----------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
