@@ -6,7 +6,6 @@ from django.utils import timezone
 
 class SBikeUser(models.Model):
     user = models.OneToOneField(User)
-
     dni = models.IntegerField(blank=False, primary_key=True)
     phone_number = models.IntegerField(null=True, blank=True)
 
@@ -58,6 +57,10 @@ class Station(models.Model):
         self.address = address
         self.stock = stock
         self.capacity = capacity
+        self.save()
+
+    def assign_employee(self, employee):
+        self.employee = employee
         self.save()
 
     def remove_from_stock(self):
@@ -148,6 +151,7 @@ class Sanction(models.Model):
     def generate_deposition(self, deposition):
         self.deposition = deposition
         self.save()
+
 
 class Notification(models.Model):
     station = models.OneToOneField(Station)
