@@ -1,0 +1,15 @@
+{% extends 'Sbike/base.html' %}
+
+{% block title %}Status de Bicicleta{% endblock title %}
+
+{% block content %}
+<form method="post" action="">
+       {% csrf_token %}
+       ID: <select name="bike_id" id = "bike_id">
+                {% for queue in brokenbikes %}
+                    <option name="{{ queue.id }}">{{ queue.id }}</option>
+                {% endfor %}
+            </select>
+       <input type="submit" class="btn btn-default" name="Repair" value="Repair" />
+</form>
+{% endblock content %}

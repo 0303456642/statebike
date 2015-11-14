@@ -13,6 +13,8 @@ from django.db import IntegrityError
 from .forms import ClientRegisterForm, ClientEditPhoneForm, ClientEditEmailForm
 from .forms import ClientEditNameForm, ClientEditPasswordForm, ClientEditCardDataForm
 
+from itertools import chain
+
 from .models import Client
 from .models import Admin
 from .models import Employee
@@ -522,4 +524,46 @@ def ClientEditEmail(request):
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###-----------------------------------------------END--EDIT--CLIENT--EMAIL-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------------------SET-BIKE-STATUS-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+@login_required
+def setBikeStatus(request):
+    try:
+        #ver si es realmente un empleado
+        SMaster = Employee.objects.get(user = request.user)
+        #obtener todas las estaciones a cargo del empleado
+        Stations = Station.objects.filter(employee = SMaster)
+        # ahora viene la pesada
+        #obtener solo las bicis rotas que estan en estaciones a cargo del empleado
+        try:
+            context = dict()
+            context['brokenbikes'] = []    
+            for S in Stations:
+                filterargs = { 'state': 'BR', 'station': S }
+                #si alguien consigue que chain funcione nos ahorra 600% de memoria
+                broken = Bike.objects.filter(**filterargs)
+                context['brokenbikes'] = context['brokenbikes'] + list(broken)
+        except Bike.DoesNotExist:
+            messages.error(request, 'not are bikes here')
+        if request.method == 'POST':
+            bike_id = request.POST.get('bike_id')
+            try:
+                bike = Bike.objects.get(id = bike_id)
+                bike.state = 'AV'
+                bike.save()
+                messages.success(request, 'bike repaired!')
+            except Bike.DoesNotExist:
+                messages.error(request, 'that bike not exist!')
+        return render(request, 'Sbike/set_bike_status.html', context)        
+    except Employee.DoesNotExist:
+        messages.error(request, 'You not have permissions to perform this action')
+        return redirect('/stationprofile')
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###----------------------------------------------------END-SET-BIKE-STATUS-------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###

@@ -32,7 +32,8 @@ urlpatterns = [
     url(r'^editprofile/card$', views.clientEditCardData),
     url(r'^editprofile/phone$', views.ClientEditPhone),
     url(r'^editprofile/email$', views.ClientEditEmail),
-    url(r'^webprofile/$', views.webProfile),
+    url(r'^webprofile/$', views.webProfile),   
+    url(r'^setstatus/$', views.setBikeStatus),
     url(r'^bikeloan/$', views.bikeLoan),
     url(r'^giveback/$', views.givebackView)
 ]
