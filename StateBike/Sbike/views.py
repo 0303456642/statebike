@@ -539,31 +539,42 @@ def ClientEditEmail(request):
 def setBikeStatus(request):
     try:
         #ver si es realmente un empleado
-        SMaster = Employee.objects.get(user=request.user)
+        SMaster = Employee.objects.get(user = request.user)
         #obtener todas las estaciones a cargo del empleado
-        Stations = Station.objects.filter(employee=SMaster)
-        # ahora viene la pesada
+        Stations = Station.objects.filter(employee = SMaster)
+
+        #action es la accion a realizar y bike_id es la bicileta a la cual aplicar
+        if request.method == 'POST':
+            bike_id = request.POST.get('bike_id')
+            action = request.POST.get('Action')
+            try:
+                bike = Bike.objects.get(id = bike_id)
+                if action == 'Repair':
+                    bike.state = 'AV'
+                    messages.success(request, 'bike repaired!')
+                elif action == 'Set as broken':
+                    bike.state = 'BR'
+                    messages.success(request, 'bike not longer available!')
+                bike.save()
+            except Bike.DoesNotExist:
+                messages.error(request, 'that bike not exist!')
+
         #obtener solo las bicis rotas que estan en estaciones a cargo del empleado
         try:
             context = dict()
             context['brokenbikes'] = []
+            context['availablebikes'] = []
             for S in Stations:
-                filterargs = {'state': 'BR', 'station': S}
-                #si alguien consigue que chain funcione nos ahorra 600% de memoria
-                broken = Bike.objects.filter(**filterargs)
-                context['brokenbikes'] = context['brokenbikes'] + list(broken)
+                filterargsA = { 'state': 'AV', 'station': S }
+                available = Bike.objects.filter(**filterargsA)
+                context['availablebikes'].extend(list(available))
+                filterargsB = { 'state': 'BR', 'station': S }
+                broken = Bike.objects.filter(**filterargsB)
+                context['brokenbikes'].extend(list(broken))  
         except Bike.DoesNotExist:
             messages.error(request, 'not are bikes here')
-        if request.method == 'POST':
-            bike_id = request.POST.get('bike_id')
-            try:
-                bike = Bike.objects.get(id=bike_id)
-                bike.state = 'AV'
-                bike.save()
-                messages.success(request, 'bike repaired!')
-            except Bike.DoesNotExist:
-                messages.error(request, 'that bike not exist!')
-        return render(request, 'Sbike/set_bike_status.html', context)
+
+        return render(request, 'Sbike/set_bike_status.html', context)        
     except Employee.DoesNotExist:
         messages.error(request, 'You not have permissions to perform this action')
         return redirect('/stationprofile')
