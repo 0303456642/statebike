@@ -13,6 +13,8 @@ from django.db import IntegrityError
 from .forms import ClientRegisterForm, ClientEditPhoneForm, ClientEditEmailForm
 from .forms import ClientEditNameForm, ClientEditPasswordForm, ClientEditCardDataForm
 
+from itertools import chain
+
 from .models import Client
 from .models import Admin
 from .models import Employee
@@ -533,11 +535,19 @@ def ClientEditEmail(request):
 def setBikeStatus(request):
     try:
         #ver si es realmente un empleado
-        user = Employee.objects.get(user = request.user)
-        Bike.objects.filter(state = 'BR')
+        SMaster = Employee.objects.get(user = request.user)
+        #obtener todas las estaciones a cargo del empleado
+        Stations = Station.objects.filter(employee = SMaster)
+        # ahora viene la pesada
+        #obtener solo las bicis rotas que estan en estaciones a cargo del empleado
         try:
             context = dict()
-            context['brokenbikes'] = Bike.objects.filter(state = 'BR')
+            context['brokenbikes'] = []    
+            for S in Stations:
+                filterargs = { 'state': 'BR', 'station': S }
+                #si alguien consigue que chain funcione nos ahorra 600% de memoria
+                broken = Bike.objects.filter(**filterargs)
+                context['brokenbikes'] = context['brokenbikes'] + list(broken)
         except Bike.DoesNotExist:
             messages.error(request, 'not are bikes here')
         if request.method == 'POST':
