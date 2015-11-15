@@ -66,6 +66,7 @@ class Station(models.Model):
     def remove_from_stock(self):
         self.stock = self.stock - 1
         self.save()
+        return self.stock == 0
 
     def add_to_stock(self):
         self.stock = self.stock + 1
