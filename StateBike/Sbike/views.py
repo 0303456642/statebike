@@ -287,6 +287,9 @@ def clientProfile(request, client):
 def adminProfile(request, admin):
 
     dict = createUserDict(admin)
+
+    # add notifications into dict
+    dict['notif'] =  Notification.objects.all()
     return render(request, 'Sbike/admin_profile.html', dict)
 
 
@@ -332,7 +335,9 @@ def bikeLoan(request):
 
             # update data base after possible exception
             Bike.objects.filter(id=bike_id).update(state='TK')
-            station.remove_from_stock()
+            if station.remove_from_stock():
+                notif = Notification()
+                notif.add_station(station)
 
             messages.success(request, 'Loan: Bike '+str(bike_id))
         except IntegrityError:
@@ -375,7 +380,11 @@ def givebackView(request):
         else:
             Loan.objects.filter(bike=bike_id).delete()
 
-        Bike.objects.filter(id=bike_id).update(state='AV')
+        # actualizar info de la bicicleta
+        bike = Bike.objects.get(id=bike_id)
+        bike.give_back()
+        bike.move(station)
+
         message = 'Thanks For Return!'
         return render(request, 'Sbike/give_back.html', {'message': message})
 
