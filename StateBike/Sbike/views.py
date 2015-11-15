@@ -640,3 +640,86 @@ def createStation(request):
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###------------------------------------------------END--CREATE--STATION----------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------------ASSIGN--EMPLOYEE-TO-STATION-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+@login_required
+def assignEmployee(request):
+    if request.method == 'POST':
+        try:
+            employee_dni = request.POST.get('selectemployee')
+        except IntegrityError:
+            messages.error(request, 'Error! 123!')
+        finally:
+            request.session['employee_to_assign'] = int(employee_dni)
+            return redirect('/assignstation')
+
+    employees = Employee.objects.filter(is_assigned=False)
+    if len(employees) == 0:
+        messages.error(request, 'Sorry, No Employees!')
+    return render(request, 'Sbike/assign_employee.html', ({'employees': employees}))
+
+@login_required
+def assignStation(request):
+    if request.method == 'POST':
+        try:
+            station_id = request.POST.get('selectstation')
+            employee = Employee.objects.filter(dni=int(request.session['employee_to_assign']))
+            station = Station.objects.filter(id=station_id)
+            station.update(employee=employee[0])
+            employee.update(is_assigned=True)
+        except IntegrityError:
+            messages.error(request, 'Error! 123!')
+        finally:
+            msg = 'Employee Assigned: ' + str(employee[0].user) + ' - Station: ' + str(station[0].name)
+            messages.success(request, msg)
+            return redirect('/webprofile')
+
+    stations = Station.objects.filter(employee__isnull=True)
+    if len(stations) == 0:
+        messages.error(request, 'Sorry, No Free Stations!')
+    return render(request, 'Sbike/assign_station.html', ({'stations': stations}))
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###---------------------------------------END--ASSIGN--EMPLOYEE-TO-STATION-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------UNASSIGN--EMPLOYEE-TO-STATION-------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+
+@login_required
+def unassignEmployee(request):
+    if request.method == 'POST':
+        try:
+            employee_dni = request.POST.get('selectemployee')
+            employee = Employee.objects.filter(dni=int(request.session['employee_to_assign']))
+            station = Station.objects.filter(employee=employee[0])
+            employee.update(is_assigned=False)
+            station_id.update(employee=Null)
+        except IntegrityError:
+            messages.error(request, 'Error! 123!')
+        finally:
+            msg = 'Employee Unnasigned: ' + str(employee[0].user) + ' - Station: ' + str(station[0].name)
+            messages.success(request, msg)
+            request.session['employee_to_assign'] = int(employee_dni)
+            return redirect('/webprofile')
+
+    employees = Employee.objects.filter(is_assigned=True)
+    if len(employees) == 0:
+        messages.error(request, 'Sorry, No Free Employees!')
+    return render(request, 'Sbike/unassign_employee.html', ({'employees': employees}))
+
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###--------------------------------------END--UNASSIGN--EMPLOYEE-TO-STATION------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+

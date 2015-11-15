@@ -2,6 +2,7 @@
 
 {% block title %} Profile of {{ username }} - StateBike {% endblock title %}
 {% block content %}
+{{request.user.first_name}}
 <h1>User Profile: <strong>{{ username }}</strong> </h1>
 <hr />
 <h2>Personal Data</h2>
