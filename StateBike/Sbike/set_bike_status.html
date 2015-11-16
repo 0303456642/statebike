@@ -4,22 +4,39 @@
 
 {% block content %}
 <form method="post" action="">
-       {% csrf_token %}
-       Bikes Broken on your stations: <br>
-        <select name="bike_id" id = "bike_id">
-                {% for queue in brokenbikes %}
-                    <option name="{{ queue.id }}">{{ queue.id }}</option>
-                {% endfor %}
-            </select>
-       <input type="submit" class="btn btn-default" name = "Action" value="Repair" />
-       Bikes Available on your stations: <br>
-        <select name="bike_id" id = "bike_id">
-                {% for queue in availablebikes %}
-                    <option name="{{ queue.id }}">{{ queue.id }}</option>
-                {% endfor %}
-            </select>
-       <input type="submit" class="btn btn-default" name = "Action" value="Set asbroken" />
-
-
+    {% csrf_token %}
+    Bikes Broken on your stations: 
+    <br>
+    <table width=300>
+        <tr>
+            <th scope="col" width=100>select </th>
+            <th scope="col" width=100>id</th>
+            <th scope="col" width=100>station</th>
+        </tr>
+        {% for bike in brokenbikes %}
+            <tr>
+                <td width=100><input name="bike_id" type="radio" value="{{ bike.id }}"/></td>
+                <td width=100>{{ bike.id }} </td>
+                <td width=100>{{ bike.station.name }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <input type="submit" class="btn btn-default" name = "Action" value="Repair" />
+    Bikes Available on your stations: <br>
+    <table width=300>
+        <tr>
+            <th scope="col" width=100>select </th>
+            <th scope="col" width=100>id</th>
+            <th scope="col" width=100>station</th>
+        </tr>
+        {% for bike in availablebikes %}
+            <tr>
+                <td width=100><input name="bike_id" type="radio" value="{{ bike.id }}"/></td>
+                <td width=100>{{ bike.id }} </td>
+                <td width=100>{{ bike.station.name }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <input type="submit" class="btn btn-default" name = "Action" value="Set as broken" />
 </form>
 {% endblock content %}
