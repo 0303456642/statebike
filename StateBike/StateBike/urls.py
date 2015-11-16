@@ -36,5 +36,8 @@ urlpatterns = [
     url(r'^setstatus/$', views.setBikeStatus),
     url(r'^bikeloan/$', views.bikeLoan),
     url(r'^giveback/$', views.givebackView),
+    url(r'^assignemployee/$', views.assignEmployee),
+    url(r'^unassignemployee/$', views.unassignEmployee),
+    url(r'^assignstation/$', views.assignStation),
     url(r'^createstation/$', views.createStation)
 ]

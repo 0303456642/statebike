@@ -38,11 +38,12 @@ class Admin(SBikeUser):
 
 
 class Employee(SBikeUser):
+    is_assigned = models.BooleanField(default=False)
     pass
 
 
 class Station(models.Model):
-    employee = models.ForeignKey(Employee)
+    employee = models.ForeignKey(Employee, null=True, blank=True)
     name = models.CharField(max_length=200)
     address = models.CharField(max_length=200)
     stock = models.IntegerField(blank=False)

@@ -24,19 +24,20 @@
 </div>
 <div id="admin-actions">
 <ul>
-  <li><a href="/createstation/">Create station</a></li>
-  <li><a href="#">Move bicycles</a></li>
-  <li><a href="#">Assign stations to employee</a></li>
-  <li><a href="#">View registered users</a></li>
+  <li><a href="/createstation/">Create Station</a></li>
+  <li><a href="movebike">Move Bicycles</a></li>
+  <li><a href="/assignemployee">Assign Stations to Employee</a></li>
+  <li><a href="/unassignemployee">Unassign Employee</a></li>
+
+  <li><a href="#">View Registered Users</a></li>
 </ul>
 </div>
 <h2>Personal Data</h2>
 <hr />
 <ul>
-  <li>Name: {{ fname }} {{ lname }}</li>
-  <li>DNI: {{ dni }}</li>
-  <li>Phone Number: {{ phone }}</li>
-  <li>Email: {{ email }}</li>
-</ul>
+  <li><strong>Name:</strong> {{ fname }} {{ lname }}</li>
+  <li><strong>DNI:</strong> {{ dni }}</li>
+  <li><strong>Phone Number:</strong> {{ phone }}</li>
+  <li><strong>Email:</strong> {{ email }}</li>
 
 {% endblock content %}
