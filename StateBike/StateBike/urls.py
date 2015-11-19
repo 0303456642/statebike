@@ -39,6 +39,7 @@ urlpatterns = [
     url(r'^assignemployee/$', views.assignEmployee),
     url(r'^unassignemployee/$', views.unassignEmployee),
     url(r'^assignstation/$', views.assignStation),
+    url(r'^unassignstation/$', views.unassignStation),
     url(r'^createstation/$', views.createStation),
     url(r'^viewclients/$', views.view_clients),
     url(r'^movebike/$', views.moveBike)

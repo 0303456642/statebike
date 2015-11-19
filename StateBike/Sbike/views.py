@@ -658,7 +658,7 @@ def assignEmployee(request):
             request.session['employee_to_assign'] = int(employee_dni)
             return redirect('/assignstation')
 
-    employees = Employee.objects.filter(is_assigned=False)
+    employees = Employee.objects.all()
     if len(employees) == 0:
         messages.error(request, 'Sorry, No Employees!')
     return render(request, 'Sbike/assign_employee.html', ({'employees': employees}))
@@ -690,9 +690,8 @@ def assignStation(request):
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
-###------------------------------------------UNASSIGN--EMPLOYEE-TO-STATION-------------------------------------------------------------###
+###--------------------------------------------UNASSIGN--EMPLOYEE-FROM-STATION---------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
-
 
 
 @login_required
@@ -700,27 +699,44 @@ def unassignEmployee(request):
     if request.method == 'POST':
         try:
             employee_dni = request.POST.get('selectemployee')
-            employee = Employee.objects.filter(dni=int(request.session['employee_to_assign']))
-            station = Station.objects.filter(employee=employee[0])
-            employee.update(is_assigned=False)
-            station_id.update(employee=Null)
         except IntegrityError:
             messages.error(request, 'Error! 123!')
         finally:
-            msg = 'Employee Unnasigned: ' + str(employee[0].user) + ' - Station: ' + str(station[0].name)
-            messages.success(request, msg)
-            request.session['employee_to_assign'] = int(employee_dni)
-            return redirect('/webprofile')
+            request.session['employee_to_unassign'] = int(employee_dni)
+            return redirect('/unassignstation')
 
     employees = Employee.objects.filter(is_assigned=True)
     if len(employees) == 0:
-        messages.error(request, 'Sorry, No Free Employees!')
+        messages.error(request, 'Sorry, No Employees Assigned!')
     return render(request, 'Sbike/unassign_employee.html', ({'employees': employees}))
 
+@login_required
+def unassignStation(request):
+    if request.method == 'POST':
+        try:
+            station_id = request.POST.get('selectstation')
+            employee = Employee.objects.filter(dni=int(request.session['employee_to_unassign']))
+            station = Station.objects.filter(id=station_id)
+            station.update(employee=None)
+            if (request.session['stations_assigned'] == 1):
+                employee.update(is_assigned=False)
+        except IntegrityError:
+            messages.error(request, 'Error! 123!')
+        finally:
+            msg = 'Employee Unassigned: ' + str(employee[0].user) + ' - Station: ' + str(station[0].name)
+            messages.success(request, msg)
+            return redirect('/webprofile')
+
+    employee = Employee.objects.filter(dni=int(request.session['employee_to_unassign']))
+    stations = Station.objects.filter(employee=employee)
+    request.session['stations_assigned'] = len(stations)
+    if len(stations) == 0:
+        messages.error(request, 'Sorry, No Assigned Stations!') #No deberia ocurrir nunca
+    return render(request, 'Sbike/unassign_station.html', ({'stations': stations}))
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
-###--------------------------------------END--UNASSIGN--EMPLOYEE-TO-STATION------------------------------------------------------------###
+###---------------------------------------END--UNASSIGN--EMPLOYEE-FROM-STATION---------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
@@ -766,12 +782,12 @@ def moveBike(request):
             args = { 'state': 'AV', 'station' : station[0] }
             bike = Bike.objects.filter(**args)
             station = Station.objects.filter(id = stationD)
-            print "\nstationO: " + stationO
-            print "\nstationD: " + stationD  
-            print "\nbike_id: " + str(bike[0].id)          
-            print "lenbike" + str(len(bike))
-            print "   amoubt" + str(int(bikeamount))
-            print "list of stations :" + str(station[0]) + "\n"
+            print ("\nstationO: " + stationO)
+            print ("\nstationD: " + stationD)
+            print ("\nbike_id: " + str(bike[0].id))
+            print ("lenbike" + str(len(bike)))
+            print ("   amoubt" + str(int(bikeamount)))
+            print ("list of stations :" + str(station[0]) + "\n")
             if bikeamount <= len(bike):
                 for i in range(0,int(bikeamount)-1):
                     bike[i].station = station[0]

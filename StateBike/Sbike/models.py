@@ -10,7 +10,7 @@ class SBikeUser(models.Model):
     phone_number = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return "DNI: " + str(self.dni)
+        return "User: " + str(self.user.username)
 
     def edit_phone(self, phone):
         self.phone_number = phone
@@ -32,13 +32,20 @@ class Client(SBikeUser):
         self.security_code = security_code
         self.save()
 
+    def __str__(self):
+        return str(self.user.username)
+
 
 class Admin(SBikeUser):
+    def __str__(self):
+        return str(self.user.username)
     pass
 
 
 class Employee(SBikeUser):
     is_assigned = models.BooleanField(default=False)
+    def __str__(self):
+        return str(self.user.username)
     pass
 
 
