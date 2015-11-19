@@ -39,5 +39,5 @@ urlpatterns = [
     url(r'^assignemployee/$', views.assignEmployee),
     url(r'^unassignemployee/$', views.unassignEmployee),
     url(r'^assignstation/$', views.assignStation),
-    url(r'^createstation/$', views.createStation)
+    url(r'^createstation/$', views.createStation),
 ]
