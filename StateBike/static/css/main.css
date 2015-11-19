@@ -66,3 +66,11 @@ input[type="submit"] {
     margin-bottom:10px;
     font-size:20px;
 }
+
+#clients-table {
+
+    border:1px solid black;
+    width: 600px;
+    margin:0 auto;
+    margin-top: 50px;
+}
