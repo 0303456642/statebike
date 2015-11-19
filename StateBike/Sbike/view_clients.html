@@ -1,0 +1,21 @@
+{% extends 'Sbike/base.html' %}
+
+{% block title %} View Registered Users {% endblock title %}
+
+{% block content %}
+    {% if message %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endif %}
+
+<h1>View Registered Users  </h1>
+<table id="clients-table">
+<tr> <td>Clients </td> <td> State </td></tr>
+  {% for cli in clients %}
+    <tr><td>{{cli.fname}} {{cli.lname}}</td><td>{% if cli.sanction %} Sancionado {% else %} No sancionado{% endif %}</td></tr>
+  {% endfor %}
+
+</table>
+
+{% endblock content %}

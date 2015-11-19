@@ -66,3 +66,27 @@ input[type="submit"] {
     margin-bottom:10px;
     font-size:20px;
 }
+
+#clients-table {
+
+    border:1px solid black;
+    width: 600px;
+    margin:0 auto;
+    margin-top: 50px;
+}
+
+#clients-table td:nth-child(1){
+    border-right:1px solid black;
+    width: 300px;
+}
+
+#clients-table tr {
+    text-align: center;
+    height:40px;
+}
+
+#clients-table tr:nth-child(1){
+    border:1px solid black;
+    font-size:21px;
+    height:45px;
+}
