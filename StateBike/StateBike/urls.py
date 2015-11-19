@@ -40,5 +40,6 @@ urlpatterns = [
     url(r'^unassignemployee/$', views.unassignEmployee),
     url(r'^assignstation/$', views.assignStation),
     url(r'^createstation/$', views.createStation),
-    url(r'^viewclients/$', views.view_clients)
+    url(r'^viewclients/$', views.view_clients),
+    url(r'^movebike/$', views.moveBike)
 ]
