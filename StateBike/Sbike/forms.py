@@ -2,8 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import Client
 
-
-class ClientRegisterForm(forms.Form):
+class RegisterForm(forms.Form):
     username = forms.CharField(min_length=6, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Username'}))
     password1 = forms.CharField(min_length=8, widget=forms.PasswordInput(
@@ -22,12 +21,6 @@ class ClientRegisterForm(forms.Form):
         attrs={'class': 'form-control', 'placeholder': 'Optional'}))
     dni = forms.IntegerField(widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'DNI'}))
-    card_number = forms.IntegerField(widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Card Number'}))
-    expiration_date = forms.DateField(widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}))
-    security_code = forms.IntegerField(widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'xxxx'}))
 
     def clean_username(self):
         """Comprueba que no existe el mismo user en la db"""
@@ -57,6 +50,15 @@ class ClientRegisterForm(forms.Form):
         if Client.objects.filter(dni=dni):
             raise forms.ValidationError('Ya se ha registrado ese dni')
         return dni
+
+
+class ClientRegisterForm(RegisterForm):
+    card_number = forms.IntegerField(widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'Card Number'}))
+    expiration_date = forms.DateField(widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}))
+    security_code = forms.IntegerField(widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'xxxx'}))
 
 
 class ClientEditPasswordForm(forms.Form):
