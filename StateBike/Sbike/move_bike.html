@@ -1,0 +1,25 @@
+{% extends 'Sbike/base.html' %}
+
+{% block title %}Move Bike{% endblock title %}
+
+{% block content %}
+<form method="post" action="">
+  	{% csrf_token %}
+	From Station
+   	<select name="select1">
+		{% for queue in stations %}
+            	<option value="{{ queue.id }}">{{ queue.name }}</option>
+		{% endfor %}
+	</select>
+	To Station
+	<select name="select2">
+		{% for queue in stations %}
+				<option value="{{ queue.id}}">{{ queue.name }}</option>
+		{% endfor %}
+	</select>
+	Move 
+	<input type = "number" name = "select3">
+	Bikes 
+	<input type="submit" class="btn btn-default" value="Move Bikes" />
+</form>
+{% endblock content %}
