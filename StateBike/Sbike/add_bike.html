@@ -1,0 +1,18 @@
+{% extends 'Sbike/base.html' %}
+
+{% block title %}Add Bike{% endblock title %}
+
+{% block content %}
+<form method="post" action="">
+  	{% csrf_token %}
+	select station to insert bikes:
+   	<select class="form-control"  name="select">
+		{% for queue in stations %}
+            	<option value="{{ queue.id }}">{{ queue.name }}</option>
+		{% endfor %}
+	</select>
+    select amount of bikes to create:
+	<input type = "number" name = "input">
+	<input type="submit" class="btn btn-default" value="add Bikes" />
+</form>
+{% endblock content %}

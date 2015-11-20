@@ -802,3 +802,37 @@ def moveBike(request):
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
 
+###------------------------------------------------------------------------------------------------------------------------------------###
+###---------------------------------------------------------ADD-BIKE-------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+def addBike(request):
+   user_type = request.session['user_type']
+
+   if user_type == 'admin':
+        if request.method == 'POST':
+            stationD = request.POST.get('select')
+            bikeamount = request.POST.get('input')
+            print "\nstationO: " + stationD
+            print "   amoubt" + str(int(bikeamount))
+            stationDes = Station.objects.filter(id = stationD)[0]
+            stockAll = len(Bike.objects.filter(station = stationDes))
+            if (stockAll + int(bikeamount)) <= stationDes.capacity:
+                for i in range(0,int(bikeamount)):
+                    bike = Bike()
+                    bike.station = stationDes
+                    bike.save()
+                    messages.success(request, 'bike ' + str(bike.id) + ' created')
+                messages.success(request, str(i+1) + ' bikes created in ' + stationDes.name)
+            else:
+                messages.error(request, 'the station '+ stationDes.name + ' just have ' + str(stationDes.capacity - stockAll) + ' spaces empty')
+
+        station = list(Station.objects.all())
+        return render(request, 'Sbike/add_bike.html', {'stations' : station })
+   else:
+        messages.error(request, 'This Content is Unavailable!')
+        return redirect('/stationprofile')
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------------END-ADD-BIKE------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+

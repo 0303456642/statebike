@@ -42,5 +42,7 @@ urlpatterns = [
     url(r'^unassignstation/$', views.unassignStation),
     url(r'^createstation/$', views.createStation),
     url(r'^viewclients/$', views.view_clients),
-    url(r'^movebike/$', views.moveBike)
+    url(r'^movebike/$', views.moveBike),
+    url(r'^addbikes/$', views.addBike)
 ]
+
