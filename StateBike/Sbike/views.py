@@ -11,8 +11,8 @@ from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 
 from .forms import ClientRegisterForm, ClientEditPhoneForm, ClientEditEmailForm
-from .forms import ClientEditNameForm, ClientEditPasswordForm
-from .forms import ClientEditCardDataForm, CreateStationForm
+from .forms import ClientEditNameForm, ClientEditPasswordForm, ClientEditCardDataForm
+from .forms import CreateStationForm, RegisterForm
 
 from itertools import chain
 
@@ -835,4 +835,63 @@ def addBike(request):
 ###------------------------------------------------------------------------------------------------------------------------------------###
 ###------------------------------------------------------END-ADD-BIKE------------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
+
+
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------------REGISTER--EMPLOYEE--------------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
+@login_required
+def employeeRegister(request):
+    user_type = request.session['user_type']
+    if user_type == 'admin':
+        if request.method == 'POST':
+            form = RegisterForm(request.POST)
+
+            if form.is_valid():
+                cleaned_data = form.cleaned_data
+                username = cleaned_data.get('username')
+                password = cleaned_data.get('password1')
+                first_name = cleaned_data.get('first_name')
+                last_name = cleaned_data.get('last_name')
+                email = cleaned_data.get('email')
+                phone_number = cleaned_data.get('phone_number')
+                dni = cleaned_data.get('dni')
+
+                user = User.objects.create_user(username, email, password)
+
+                user.first_name = first_name
+                user.last_name = last_name
+
+                user.save()
+
+                employee = Employee()
+                employee.user = user
+                employee.phone_number = phone_number
+                employee.dni = dni
+
+                employee.save()
+
+                messages.success(request, 'You Have Successfully Registered An Employee')
+
+                return redirect('/webprofile')
+
+        else:        
+            form = RegisterForm()
+        context = {
+            'form': form
+        }
+
+        return render(request, 'Sbike/employee_register.html', context)
+
+    else:
+        messages.error(request, 'This Content is Unavailable!')
+        return redirect('/webprofile')
+    
+
+###------------------------------------------------------------------------------------------------------------------------------------###
+###------------------------------------------END--REGISTER--EMPLOYEE-------------------------------------------------------------------###
+###------------------------------------------------------------------------------------------------------------------------------------###
+
 
