@@ -766,40 +766,6 @@ def view_clients(request):
 ###------------------------------------------------END--VIEW_CLIENTS----------------------------------------------------------------###
 ###------------------------------------------------------------------------------------------------------------------------------------###
 
-###------------------------------------------------------------------------------------------------------------------------------------###
-###------------------------------------------------MOVE--BIKE--------------------------------------------------------------------------###
-###------------------------------------------------------------------------------------------------------------------------------------###
-@login_required
-def moveBike(request):
-   user_type = request.session['user_type']
-
-   if user_type == 'admin':
-        if request.method == 'POST':
-            stationO = request.POST.get('select1')
-            stationD = request.POST.get('select2')
-            bikeamount = request.POST.get('select3')
-            station = Station.objects.filter(id = stationO)
-            args = { 'state': 'AV', 'station' : station[0] }
-            bike = Bike.objects.filter(**args)
-            station = Station.objects.filter(id = stationD)
-            print ("\nstationO: " + stationO)
-            print ("\nstationD: " + stationD)
-            print ("\nbike_id: " + str(bike[0].id))
-            print ("lenbike" + str(len(bike)))
-            print ("   amoubt" + str(int(bikeamount)))
-            print ("list of stations :" + str(station[0]) + "\n")
-            if bikeamount <= len(bike):
-                for i in range(0,int(bikeamount)-1):
-                    bike[i].station = station[0]
-                    bike[i].save()
-        station = list(Station.objects.all())
-        return render(request, 'Sbike/move_bike.html', {'stations' : station })
-   else:
-        messages.error(request, 'This Content is Unavailable!')
-        return redirect('/stationprofile')
-###------------------------------------------------------------------------------------------------------------------------------------###
-###------------------------------------------------END--MOVE--BIKE---------------------------------------------------------------------###
-###------------------------------------------------------------------------------------------------------------------------------------###
 
 
 ###------------------------------------------------------------------------------------------------------------------------------------###
