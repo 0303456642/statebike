@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase, Client
 from Sbike import views
-import os
+import os, re
 
 # Create your tests here.
 
@@ -26,7 +26,8 @@ class Accesos(TestCase):
     templates = {
         'home' : 'home.html',
         'register' : 'client_register.html',
-        'weblogin' : 'web_login.html'
+        'weblogin' : 'web_login.html',
+        'clientprofile' : 'client_profile.html'
     }
 
     def test_home(self):
@@ -85,9 +86,15 @@ class Accesos(TestCase):
         # y recibir el msj de exito
         self.assertNotEqual(-1, res.content.index('You Have Successfully Registered'))
 
-        # y ahora intentamos loguearnos
+        # y ahora intentamos loguearnos bien
         self.assertTrue(c.login(username=self.formValid['username'], password=self.formValid['password1']))
 
+        # y tratamos de ir a la pagina de login (ya logueados)
+        res = c.get('/weblogin', follow=True)
+
+        # deberia llevarnos al perfil nuestro
+        self.assertTrue(self.is_template(res, self.templates['clientprofile']))
+        #self.debug(res)
 
     def debug(self, res):
         """ Vos le pasas el res y debug te banca """
@@ -109,23 +116,35 @@ class Accesos(TestCase):
         f.write(res.content)
         print('Respuesta guardada en "respuesta.html"')
 
-    def is_template(self, res, filename):
-        titles_match = self.titles_match(res, filename)
+    def is_template(self, res, filename, details=False):
+        titles_match = self.titles_match(res, filename, details)
+
+        # aca podrian haber otros chequeos ademas de los titulos
 
         return titles_match
 
-    def titles_match(self, res, templ):
-        bar_title = self.get_content_title(res.content) == self.get_template_title(templ)
+    def titles_match(self, res, templ, details=False):
 
-        h1_title = self.get_content_h1(res.content) == self.get_template_h1(templ)
+        template_title = self.get_template_title(templ)
+        title_reg = reg_from_template(template_title)
 
-        # print('bar content: "'+ str(self.get_content_title(res.content)) +'"')
-        # print('bar template: "'+str(self.get_template_title(templ))+'"')
+        template_h1 = self.get_template_h1(templ)
+        h1_reg = reg_from_template(template_h1)
 
-        # print('h1 content: "'+ str(self.get_content_h1(res.content)) +'"')
-        # print('h1 template: "'+str(self.get_template_h1(templ))+'"')
+        bar_title_matchs = title_reg.match(self.get_content_title(res.content))
 
-        return bar_title and h1_title
+        h1_title_matchs = h1_reg.match(self.get_content_h1(res.content))
+
+        if details:
+            print('bar content: "'+ str(self.get_content_title(res.content)) +'"')
+            print('bar template: "'+str(self.get_template_title(templ))+'"')
+            print('bar regexp template: "' + title_reg.pattern + '"')
+
+            print('h1 content: "'+ str(self.get_content_h1(res.content)) +'"')
+            print('h1 template: "'+str(self.get_template_h1(templ))+'"')
+            print('h1 regexp template: "' + h1_reg.pattern + '"')
+
+        return bar_title_matchs and h1_title_matchs
 
 
     def get_template_h1(self, templ):
@@ -165,3 +184,15 @@ def find_between(s, first, last):
         return ""
 
 
+def reg_from_template(string):
+    regexp = string
+    while True:
+        try:
+            start = regexp.index('{{')
+            end = regexp.index('}}')
+        except:
+            break
+        if end < start:
+            break
+        regexp = regexp[:start] + '(.*)' + regexp[end+2:]
+    return re.compile(regexp)
