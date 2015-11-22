@@ -27,7 +27,10 @@ class Accesos(TestCase):
         'home' : 'home.html',
         'register' : 'client_register.html',
         'weblogin' : 'web_login.html',
-        'clientprofile' : 'client_profile.html'
+        'stationlogin' : 'station_login.html',
+        'clientprofile' : 'client_profile.html',
+        'stationprofile' : 'station_profile.html',
+        'stations' : 'stations.html'
     }
 
     def test_home(self):
@@ -67,34 +70,155 @@ class Accesos(TestCase):
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
 
         # y recibir el msj de exito
-        self.assertNotEqual(-1, res.content.index('You Have Successfully Registered'))
+        try:
+            res.content.index('You Have Successfully Registered')
+        except ValueError:
+            self.fail('Mensaje de exito no encontrado')
 
-
-    def test_login(self):
+    def test_weblogin(self):
         """ Intentamos loguearnos (in)validamente """
 
-        # Nos intentamos loguear con un usuario inexistente
         c = Client()
-        self.assertFalse(c.login(username='probablementeningunusuarioexistaconestenombre', password='miranda'))
+
+        # Intentamos obtener la pagina de login
+        res = c.get('/weblogin', follow=True)
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+        # Nos intentamos loguear con un usuario inexistente
+        res = c.post('/weblogin/', {'username': 'probablementeningunusuarioexistaconestenombre',
+                                    'password': 'miranda'}, follow=True)
+
+        # Nos deberia volver a llevar al login
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+        # Con un mensaje de error
+        try:
+            res.content.index('Invalid username')
+        except ValueError:
+            self.fail('Mensaje de error no encontrado')
+
 
         # ahora nos registramos 
         res = c.post('/register/', self.formValid, follow = True)        
 
-        # deberiamos obtener el login
+        # deberiamos obtener el weblogin
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
 
         # y recibir el msj de exito
-        self.assertNotEqual(-1, res.content.index('You Have Successfully Registered'))
+        try:
+            res.content.index('You Have Successfully Registered')
+        except ValueError:
+            self.fail('Mensaje de exito no encontrado')
 
         # y ahora intentamos loguearnos bien
-        self.assertTrue(c.login(username=self.formValid['username'], password=self.formValid['password1']))
+        res = c.post('/weblogin/', {'username': self.formValid['username'],
+                                    'password': self.formValid['password1']}, follow=True)
 
-        # y tratamos de ir a la pagina de login (ya logueados)
+        # deberia llevarnos al perfil nuestro
+        self.assertTrue(self.is_template(res, self.templates['clientprofile']))
+
+        # revisemos que nuestro username este en el perfil
+        try:
+            res.content.index(self.formValid['username'])
+        except ValueError:
+            self.fail('Mi username no estaba en mi perfil')
+
+        # y si tratamos de ir a la pagina de login (ya logueados)
         res = c.get('/weblogin', follow=True)
 
         # deberia llevarnos al perfil nuestro
         self.assertTrue(self.is_template(res, self.templates['clientprofile']))
-        #self.debug(res)
+
+        # revisemos que nuestro username este en el perfil
+        try:
+            res.content.index(self.formValid['username'])
+        except ValueError:
+            self.fail('Mi username no estaba en mi perfil')
+
+
+    def test_stationlogin(self):
+        """ intento de inicio de sesion en la estacion """
+
+        c = Client()
+
+        # Intentamos obtener la pagina de login
+        res = c.get('/stationlogin', follow=True)
+        self.assertTrue(self.is_template(res, self.templates['stationlogin']))
+
+        # Nos intentamos loguear con un usuario inexistente
+        res = c.post('/stationlogin/', {'username': 'probablementeningunusuarioexistaconestenombre', 'password': 'miranda'}, follow=True)
+
+        # No deberia dejarnos pasar
+        self.assertTrue(self.is_template(res, self.templates['stationlogin']))
+
+        # ahora nos registramos 
+        res = c.post('/register/', self.formValid, follow = True)
+
+        # y ahora intentamos loguearnos bien
+        res = c.post('/stationlogin/', {'username': self.formValid['username'], 'password': self.formValid['password1']}, follow=True)
+
+        # deberia llevarnos al perfil de la estacion
+        self.assertTrue(self.is_template(res, self.templates['stationprofile']))
+
+
+    def test_view_stations(self):
+        """ Intento de ver estaciones con y sin autenticacion """
+
+        c = Client()
+
+        # intentemos ver las estaciones sin login
+        res = c.get('/stations', follow=True)
+
+        # deberiamos terminar en el weblogin
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+        # nos registramos y logueamos
+        res = c.post('/register/', self.formValid, follow = True)
+        c.login(username=self.formValid['username'], password=self.formValid['password1'])
+
+        # ahora re-intentamos
+        res = c.get('/stations', follow=True)
+
+        # deberiamos terminar en stations
+        self.assertTrue(self.is_template(res, self.templates['stations']))
+
+    def test_logout(self):
+        """ Inicio y cierre de sesion """
+
+        c = Client()
+
+        # nos registramos y logueamos
+        res = c.post('/register/', self.formValid, follow = True)
+
+        # nos logueamos en la estacion
+        res = c.post('/stationlogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+        # si salio bien estamos en el station profile
+        self.assertTrue(self.is_template(res, self.templates['stationprofile']))
+
+        # cerramos sesion
+        res = c.get('/logout', follow = True)
+
+        # deberiamos terminar en la pagina de station login
+        self.assertTrue(self.is_template(res, self.templates['stationlogin']))
+
+        # nos logueamos en weblogin
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+        # si salio bien estamos en el web profile
+        self.assertTrue(self.is_template(res, self.templates['webprofile']))
+
+        # cerramos sesion
+        res = c.get('/logout', follow = True)
+
+        # deberiamos terminar en la pagina de station login
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
 
     def debug(self, res):
         """ Vos le pasas el res y debug te banca """
