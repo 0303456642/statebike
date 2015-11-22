@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase, Client
 from Sbike import views
+from django.contrib.auth.models import User
+from .models import Client as OurClient, Admin, Employee, Station
 import os, re
 
 # Create your tests here.
@@ -141,6 +143,9 @@ class Accesos(TestCase):
 
         c = Client()
 
+        # Creamos una estacion
+        self.createStation('San Martin', self.createEmployee('carlos123', 'carlitos'))
+
         # Intentamos obtener la pagina de login
         res = c.get('/stationlogin', follow=True)
         self.assertTrue(self.is_template(res, self.templates['stationlogin']))
@@ -187,7 +192,10 @@ class Accesos(TestCase):
 
         c = Client()
 
-        # nos registramos y logueamos
+        # Creamos una estacion
+        self.createStation('San Martin', self.createEmployee('carlos123', 'carlitos'))
+
+        # nos registramos
         res = c.post('/register/', self.formValid, follow = True)
 
         # nos logueamos en la estacion
@@ -212,13 +220,55 @@ class Accesos(TestCase):
                      follow=True)
 
         # si salio bien estamos en el web profile
-        self.assertTrue(self.is_template(res, self.templates['webprofile']))
+        self.assertTrue(self.is_template(res, self.templates['clientprofile']))
 
         # cerramos sesion
         res = c.get('/logout', follow = True)
 
         # deberiamos terminar en la pagina de station login
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+
+    def createStation(self, name, empl):
+
+        station = Station()
+        station.create_station(empl, name, name+ '  123', 5, 10)
+
+        return station
+
+    def createEmployee(self, username, passw):
+
+        user = User.objects.create_user(username, '', passw)
+
+        user.first_name = 'Carlos'
+        user.last_name = 'Bederian'
+
+        empl = Employee()
+        empl.user = user
+        empl.phone_number = '49291'
+        empl.dni = '18999333'
+
+        empl.save()
+
+        return empl
+
+    def createAdmin(self, username, passw):
+
+        user = User.objects.create_user(username, '', passw)
+
+        user.first_name = 'Carlos'
+        user.last_name = 'Bederian'
+
+        user.save()
+
+        admin = Admin()
+        admin.user = user
+        admin.phone_number = '351123999'
+        admin.dni = '17282282'
+
+        admin.save()
+
+        return admin
 
     def debug(self, res):
         """ Vos le pasas el res y debug te banca """
