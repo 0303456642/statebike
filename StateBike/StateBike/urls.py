@@ -41,7 +41,8 @@ urlpatterns = [
     url(r'^assignstation/$', views.assignStation),
     url(r'^unassignstation/$', views.unassignStation),
     url(r'^createstation/$', views.createStation),
-    url(r'^viewclients/$', views.view_clients),
+    url(r'^viewclients/$', views.viewClients),
+    url(r'^viewclients/(?P<username>.+)/$', views.viewClients),
     url(r'^addbikes/$', views.addBike),
     url(r'^employeeregister/$', views.employeeRegister)
 ]
