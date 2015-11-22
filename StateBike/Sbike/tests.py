@@ -31,6 +31,8 @@ class Accesos(TestCase):
         'weblogin' : 'web_login.html',
         'stationlogin' : 'station_login.html',
         'clientprofile' : 'client_profile.html',
+        'emplprofile' : 'employee_profile.html',
+        'admprofile' : 'admin_profile.html',
         'stationprofile' : 'station_profile.html',
         'stations' : 'stations.html'
     }
@@ -113,8 +115,10 @@ class Accesos(TestCase):
             self.fail('Mensaje de exito no encontrado')
 
         # y ahora intentamos loguearnos bien
-        res = c.post('/weblogin/', {'username': self.formValid['username'],
-                                    'password': self.formValid['password1']}, follow=True)
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
 
         # deberia llevarnos al perfil nuestro
         self.assertTrue(self.is_template(res, self.templates['clientprofile']))
@@ -160,7 +164,10 @@ class Accesos(TestCase):
         res = c.post('/register/', self.formValid, follow = True)
 
         # y ahora intentamos loguearnos bien
-        res = c.post('/stationlogin/', {'username': self.formValid['username'], 'password': self.formValid['password1']}, follow=True)
+        res = c.post('/stationlogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
 
         # deberia llevarnos al perfil de la estacion
         self.assertTrue(self.is_template(res, self.templates['stationprofile']))
@@ -179,7 +186,10 @@ class Accesos(TestCase):
 
         # nos registramos y logueamos
         res = c.post('/register/', self.formValid, follow = True)
-        c.login(username=self.formValid['username'], password=self.formValid['password1'])
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
 
         # ahora re-intentamos
         res = c.get('/stations', follow=True)
@@ -225,9 +235,60 @@ class Accesos(TestCase):
         # cerramos sesion
         res = c.get('/logout', follow = True)
 
-        # deberiamos terminar en la pagina de station login
+        # deberiamos terminar en la pagina de web login
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
 
+
+    def test_webprofile(self):
+        c = Client()
+
+        # intentamos obtener webprofile sin login
+        res = c.get('/webprofile', follow = True)
+
+        # deberiamos terminar en la pagina de web login
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+        # nos registramos
+        res = c.post('/register/', self.formValid, follow = True)
+
+        # nos logueamos y vamos a webprofile
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+        res = c.get('/webprofile', follow = True)
+        
+        # deberiamos terminar en la pagina de client profile
+        self.assertTrue(self.is_template(res, self.templates['clientprofile']))
+
+        # cerramos sesion
+        res = c.get('/logout', follow = True)
+
+        # Ahora como empleado
+        self.createEmployee('amigo123', 'empanada')
+        res = c.post('/weblogin/',
+                     {'username': 'amigo123',
+                      'password': 'empanada'},
+                     follow=True)
+
+        # deberiamos terminar en la pagina de employee profile
+        self.assertTrue(self.is_template(res, self.templates['emplprofile']))
+
+        # cerramos sesion
+        res = c.get('/logout', follow = True)
+
+        # Ahora como admin
+        self.createAdmin('eladmin', 'bariloche')
+        res = c.post('/weblogin/',
+                     {'username': 'eladmin',
+                      'password': 'bariloche'},
+                     follow=True)
+
+        # deberiamos terminar en la pagina de admin profile
+        self.assertTrue(self.is_template(res, self.templates['admprofile']))
+
+    def test_bike_loan(self):
+        pass
 
     def createStation(self, name, empl):
 
@@ -305,9 +366,9 @@ class Accesos(TestCase):
         template_h1 = self.get_template_h1(templ)
         h1_reg = reg_from_template(template_h1)
 
-        bar_title_matchs = title_reg.match(self.get_content_title(res.content))
+        bar_title_matchs = bool(title_reg.match(self.get_content_title(res.content)))
 
-        h1_title_matchs = h1_reg.match(self.get_content_h1(res.content))
+        h1_title_matchs = bool(h1_reg.match(self.get_content_h1(res.content)))
 
         if details:
             print('bar content: "'+ str(self.get_content_title(res.content)) +'"')
