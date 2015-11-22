@@ -160,7 +160,7 @@ def get_random_station():
 
 
 def stationLoginView(request):
-    if request.user.is_authenticated() and ('station' in request.session ):
+    if request.user.is_authenticated() and ('station' in request.session):
         return redirect('/stationprofile')
 
     message = ''
@@ -344,7 +344,7 @@ def bikeLoan(request):
 
             # update data base after possible exception
             Bike.objects.filter(id=bike_id).update(state='TK')
-            if station.remove_from_stock():
+            if station.stock() == 0:
                 notif = Notification()
                 notif.add_station(station)
 
@@ -359,7 +359,7 @@ def bikeLoan(request):
     except KeyError:
         messages.error(request, 'You must be logged from a station!')
         return redirect('/stationlogin/')
-        
+
     if len(bikes) == 0:
         messages.error(request, 'Sorry, No Bikes Available!')
     return render(request, 'Sbike/bike_loan.html', ({'bikes': bikes}))
@@ -379,10 +379,28 @@ class SanctionExist(Exception):
 @login_required
 def givebackView(request):
     station = Station.objects.get(id=request.session['station'])
+    # check if there is capacity available
+    if station.total_stock() + 1 > station.capacity:
+        messages.error(request, 'Sorry! There Is No Capacity In The Station!')
+        return render(request, 'Sbike/give_back.html')
+    client = Client.objects.get(user=request.user)
+    try:
+        # check if a sanction exists
+        if (Sanction.objects.filter(client=client).first()) is not None:
+            raise SanctionExist
+
+        loan = Loan.objects.get(client=client)
+        bike = Bike.objects.get(id=loan.bike.id)
+
+    except SanctionExist:
+        messages.error(request, 'Sorry! A Sanction is Pending')
+        return render(request, 'Sbike/give_back.html')
+    except ObjectDoesNotExist:
+        messages.error(request, 'Sorry! No Loans Outstanding!!')
+        return render(request, 'Sbike/give_back.html')
+
     if request.method == 'POST':
         bike_id = request.POST.get('select')
-
-        station.add_to_stock()
 
         loan = Loan.objects.get(bike=bike_id)
         loan.set_end_date()
@@ -402,27 +420,7 @@ def givebackView(request):
         message = 'Thanks For Return!'
         return render(request, 'Sbike/give_back.html', {'message': message})
 
-    # check if there is capacity available
-    if station.stock >= station.capacity:
-        messages.error(
-            request,
-            'Sorry! There is no capacity in the station ' + station.name)
-        return render(request, 'Sbike/give_back.html')
-    client = Client.objects.get(user=request.user)
-    try:
-        # check if a sanction exists
-        if (Sanction.objects.filter(client=client).first()) is not None:
-            raise SanctionExist
-
-        loan = Loan.objects.get(client=client)
-        bike = Bike.objects.get(id=loan.bike.id)
-        return render(request, 'Sbike/give_back.html', {'bike': bike})
-    except SanctionExist:
-        messages.error(request, 'Sorry! A Sanction is Pending')
-        return render(request, 'Sbike/give_back.html')
-    except ObjectDoesNotExist:
-        messages.error(request, 'Sorry! No Loans Outstanding!!')
-        return render(request, 'Sbike/give_back.html')
+    return render(request, 'Sbike/give_back.html', {'bike': bike})
 
 # ##-----------------------------------------------------------------------## #
 # ##------------------------END--GIVE--BACK--------------------------------## #
@@ -631,12 +629,10 @@ def createStation(request):
                 cleaned_data = form.cleaned_data
                 name = cleaned_data['name']
                 address = cleaned_data['address']
-                stock = cleaned_data['stock']
                 capacity = cleaned_data['capacity']
 
                 station = Station()
-                station.create_station(
-                    employee, name, address, stock, capacity)
+                station.create_station(employee, name, address, capacity)
                 messages.success(request, 'Station Successfully Created!')
 
                 return redirect('/webprofile')
@@ -846,22 +842,24 @@ def addBike(request):
         if request.method == 'POST':
             stationD = request.POST.get('select')
             bikeamount = request.POST.get('input')
-            print "\nstationO: " + stationD
-            print "   amoubt" + str(int(bikeamount))
             stationDes = Station.objects.filter(id=stationD)[0]
-            stockAll = len(Bike.objects.filter(station=stationDes))
+            stockAll = stationDes.total_stock()
+
+            if bikeamount  == '':
+                messages.error(request, 'Please Enter a Number')
+                return redirect('/addbikes')
             if (stockAll + int(bikeamount)) <= stationDes.capacity:
                 for i in range(0, int(bikeamount)):
                     bike = Bike()
                     bike.station = stationDes
                     bike.save()
                 messages.success(
-                    request, str(i+1) + ' bikes created in ' + stationDes.name)
+                    request, str(i+1) + ' Bikes Created In ' + stationDes.name)
                 return redirect('/webprofile')
             else:
-                msg0 = ' just have ' + str(stationDes.capacity - stockAll)
-                msg = msg0 + ' spaces empty'
-                messages.error(request, 'the station ' + stationDes.name + msg)
+                msg0 = ' Just Have ' + str(stationDes.capacity - stockAll)
+                msg = msg0 + ' Spaces Empty'
+                messages.error(request, 'The Station ' + stationDes.name + msg)
 
         station = Station.objects.all()
 
