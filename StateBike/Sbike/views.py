@@ -174,13 +174,16 @@ def stationLoginView(request):
                 try:
                     request.session['station'] = get_random_station()
                 except ValueError:
-                    return render(request, 'Sbike/station_login.html', {'message': 'There is no existing station'})
+                    return render(
+                        request, 'Sbike/station_login.html',
+                        {'message': 'There is no existing station'})
 
                 login(request, user)
                 request.session['type'] = 'station'
                 return redirect('/stationprofile')
             else:
-                return render(request, 'Sbike/station_login.html', {'message': 'Inactive User'})
+                return render(
+                    request, 'Sbike/station_login.html', {'message': 'Inactive User'})
         message = 'Invalid username/password'
     return render(request, 'Sbike/station_login.html', {'message': message})
 
