@@ -183,7 +183,8 @@ def stationLoginView(request):
                 return redirect('/stationprofile')
             else:
                 return render(
-                    request, 'Sbike/station_login.html', {'message': 'Inactive User'})
+                    request, 'Sbike/station_login.html',
+                    {'message': 'Inactive User'})
         message = 'Invalid username/password'
     return render(request, 'Sbike/station_login.html', {'message': message})
 
@@ -812,10 +813,9 @@ def addBike(request):
                     bike = Bike()
                     bike.station = stationDes
                     bike.save()
-                    messages.success(
-                        request, 'bike ' + str(bike.id) + ' created')
                 messages.success(
                     request, str(i+1) + ' bikes created in ' + stationDes.name)
+                return redirect('/webprofile')
             else:
                 msg0 = ' just have ' + str(stationDes.capacity - stockAll)
                 msg = msg0 + ' spaces empty'
