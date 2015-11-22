@@ -160,7 +160,7 @@ def get_random_station():
 
 
 def stationLoginView(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated() and ('station' in request.session ):
         return redirect('/stationprofile')
 
     message = ''
@@ -353,8 +353,13 @@ def bikeLoan(request):
             messages.error(request, 'Sorry, You Have An Outstanding Loan')
         finally:
             return redirect('/stationprofile')
-    bikes = Bike.objects.filter(state='AV',
-                                station_id=request.session['station'])
+    try:
+        bikes = Bike.objects.filter(state='AV',
+                                    station_id=request.session['station'])
+    except KeyError:
+        messages.error(request, 'You must be logged from a station!')
+        return redirect('/stationlogin/')
+        
     if len(bikes) == 0:
         messages.error(request, 'Sorry, No Bikes Available!')
     return render(request, 'Sbike/bike_loan.html', ({'bikes': bikes}))
