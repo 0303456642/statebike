@@ -278,7 +278,7 @@ def webProfile(request):
 # ##-----------------------------------------------------------------------## #
 
 
-def clientProfile(request, client):
+def clientProfile(request, client, readOnly=False):
 
     # create basic info dict
     dict = createUserDict(client)
@@ -287,6 +287,8 @@ def clientProfile(request, client):
     dict['card_number'] = client.card_number
     dict['exp_date'] = client.expiration_date
     dict['sec_code'] = client.security_code
+
+    dict['read_only'] = readOnly
 
     return render(request, 'Sbike/client_profile.html', dict)
 
@@ -794,7 +796,17 @@ def unassignStation(request):
 
 
 @login_required
-def view_clients(request):
+def viewClients(request, username=''):
+
+    if username:
+        clients = Client.objects.filter(user__username=username)
+        if clients.first() is not None:
+            return clientProfile(request, clients[0], readOnly=True)
+        else:
+            return render(request, 'Sbike/view_clients.html',
+                          {'message': 'The user "' +
+                           username + '" does not exist'})
+
     user_type = request.session['user_type']
 
     if user_type == 'admin':
@@ -812,6 +824,7 @@ def view_clients(request):
     else:
         messages.error(request, 'This Content is Unavailable!')
         return redirect('/webprofile')
+
 
 # ##-----------------------------------------------------------------------## #
 # ##--------------------------END--VIEW_CLIENTS----------------------------## #

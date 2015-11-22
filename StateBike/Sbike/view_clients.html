@@ -13,7 +13,7 @@
 <table id="clients-table">
 <tr> <td>Clients </td> <td> State </td></tr>
   {% for cli in clients %}
-    <tr><td>{{cli.fname}} {{cli.lname}}</td><td>{% if cli.sanction %} Sancionado {% else %} No sancionado{% endif %}</td></tr>
+    <tr><td><a href="{{ cli.username }}">{{cli.fname}} {{cli.lname}}</a></td><td>{% if cli.sanction %} Sanctioned {% else %} Not sanctioned {% endif %}</td></tr>
   {% endfor %}
 
 </table>
