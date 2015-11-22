@@ -599,7 +599,7 @@ def setBikeStatus(request):
         return render(request, 'Sbike/set_bike_status.html', context)
     except Employee.DoesNotExist:
         messages.error(
-            request, 'You not have permissions to perform this action')
+            request, 'This Content is Unavailable!')
         return redirect('/stationprofile')
 
 # ##-----------------------------------------------------------------------## #
@@ -664,44 +664,57 @@ def createStation(request):
 
 @login_required
 def assignEmployee(request):
-    if request.method == 'POST':
-        try:
-            employee_dni = request.POST.get('selectemployee')
-        except IntegrityError:
-            messages.error(request, 'Error! 123!')
-        finally:
-            request.session['employee_to_assign'] = int(employee_dni)
-            return redirect('/assignstation')
+    user_type = request.session['user_type']
 
-    employees = Employee.objects.all()
-    if len(employees) == 0:
-        messages.error(request, 'Sorry, No Employees!')
-    return render(
-        request, 'Sbike/assign_employee.html', {'employees': employees})
+    if user_type == 'admin':
+        if request.method == 'POST':
+            try:
+                employee_dni = request.POST.get('selectemployee')
+            except IntegrityError:
+                messages.error(request, 'Error! 123!')
+            finally:
+                request.session['employee_to_assign'] = int(employee_dni)
+                return redirect('/assignstation')
+
+        employees = Employee.objects.all()
+        if len(employees) == 0:
+            messages.error(request, 'Sorry, No Employees!')
+        return render(
+            request, 'Sbike/assign_employee.html', {'employees': employees})
+    else:
+        messages.error(request, 'This Content is Unavailable!')
+        return redirect('/webprofile')
 
 
 @login_required
 def assignStation(request):
-    if request.method == 'POST':
-        try:
-            station_id = request.POST.get('selectstation')
-            employee = Employee.objects.filter(
-                dni=int(request.session['employee_to_assign']))
-            station = Station.objects.filter(id=station_id)
-            station.update(employee=employee[0])
-            employee.update(is_assigned=True)
-        except IntegrityError:
-            messages.error(request, 'Error! 123!')
-        finally:
-            msg0 = 'Employee Assigned: ' + str(employee[0].user)
-            msg = msg0 + ' - Station: ' + str(station[0].name)
-            messages.success(request, msg)
-            return redirect('/webprofile')
+    user_type = request.session['user_type']
 
-    stations = Station.objects.filter(employee__isnull=True)
-    if len(stations) == 0:
-        messages.error(request, 'Sorry, No Free Stations!')
-    return render(request, 'Sbike/assign_station.html', {'stations': stations})
+    if user_type == 'admin':
+        if request.method == 'POST':
+            try:
+                station_id = request.POST.get('selectstation')
+                employee = Employee.objects.filter(
+                    dni=int(request.session['employee_to_assign']))
+                station = Station.objects.filter(id=station_id)
+                station.update(employee=employee[0])
+                employee.update(is_assigned=True)
+            except IntegrityError:
+                messages.error(request, 'Error! 123!')
+            finally:
+                msg0 = 'Employee Assigned: ' + str(employee[0].user)
+                msg = msg0 + ' - Station: ' + str(station[0].name)
+                messages.success(request, msg)
+                return redirect('/webprofile')
+
+        stations = Station.objects.filter(employee__isnull=True)
+        if len(stations) == 0:
+            messages.error(request, 'Sorry, No Free Stations!')
+        return render(
+            request, 'Sbike/assign_station.html', {'stations': stations})
+    else:
+        messages.error(request, 'This Content is Unavailable!')
+        return redirect('/webprofile')
 
 
 # ##-----------------------------------------------------------------------## #
@@ -712,54 +725,64 @@ def assignStation(request):
 # ##-----------------UNASSIGN--EMPLOYEE-FROM-STATION-----------------------## #
 # ##-----------------------------------------------------------------------## #
 
-
 @login_required
 def unassignEmployee(request):
-    if request.method == 'POST':
-        try:
-            employee_dni = request.POST.get('selectemployee')
-        except IntegrityError:
-            messages.error(request, 'Error! 123!')
-        finally:
-            request.session['employee_to_unassign'] = int(employee_dni)
-            return redirect('/unassignstation')
+    user_type = request.session['user_type']
 
-    employees = Employee.objects.filter(is_assigned=True)
-    if len(employees) == 0:
-        messages.error(request, 'Sorry, No Employees Assigned!')
-    return render(
-        request, 'Sbike/unassign_employee.html', ({'employees': employees}))
+    if user_type == 'admin':
+        if request.method == 'POST':
+            try:
+                employee_dni = request.POST.get('selectemployee')
+            except IntegrityError:
+                messages.error(request, 'Error! 123!')
+            finally:
+                request.session['employee_to_unassign'] = int(employee_dni)
+                return redirect('/unassignstation')
+
+        employees = Employee.objects.filter(is_assigned=True)
+        if len(employees) == 0:
+            messages.error(request, 'Sorry, No Employees Assigned!')
+        return render(
+            request, 'Sbike/unassign_employee.html', {'employees': employees})
+    else:
+        messages.error(request, 'This Content is Unavailable!')
+        return redirect('/webprofile')
 
 
 @login_required
 def unassignStation(request):
-    if request.method == 'POST':
-        try:
-            station_id = request.POST.get('selectstation')
-            employee = Employee.objects.filter(
-                dni=int(request.session['employee_to_unassign']))
-            station = Station.objects.filter(id=station_id)
-            station.update(employee=None)
-            if (request.session['stations_assigned'] == 1):
-                employee.update(is_assigned=False)
-        except IntegrityError:
-            messages.error(request, 'Error! 123!')
-        finally:
-            msg0 = 'Employee Unassigned: ' + str(employee[0].user)
-            msg = msg0 + ' - Station: ' + str(station[0].name)
-            messages.success(request, msg)
-            return redirect('/webprofile')
+    user_type = request.session['user_type']
 
-    employee = Employee.objects.filter(
-        dni=int(request.session['employee_to_unassign']))
-    stations = Station.objects.filter(employee=employee)
-    request.session['stations_assigned'] = len(stations)
-    if len(stations) == 0:
-        # No deberia ocurrir nunca
-        messages.error(request, 'Sorry, No Assigned Stations!')
-    return render(
-        request, 'Sbike/unassign_station.html', {'stations': stations})
+    if user_type == 'admin':
+        if request.method == 'POST':
+            try:
+                station_id = request.POST.get('selectstation')
+                employee = Employee.objects.filter(
+                    dni=int(request.session['employee_to_unassign']))
+                station = Station.objects.filter(id=station_id)
+                station.update(employee=None)
+                if (request.session['stations_assigned'] == 1):
+                    employee.update(is_assigned=False)
+            except IntegrityError:
+                messages.error(request, 'Error! 123!')
+            finally:
+                msg0 = 'Employee Unassigned: ' + str(employee[0].user)
+                msg = msg0 + ' - Station: ' + str(station[0].name)
+                messages.success(request, msg)
+                return redirect('/webprofile')
 
+        employee = Employee.objects.filter(
+            dni=int(request.session['employee_to_unassign']))
+        stations = Station.objects.filter(employee=employee)
+        request.session['stations_assigned'] = len(stations)
+        if len(stations) == 0:
+            # No deberia ocurrir nunca
+            messages.error(request, 'Sorry, No Assigned Stations!')
+        return render(
+            request, 'Sbike/unassign_station.html', {'stations': stations})
+    else:
+        messages.error(request, 'This Content is Unavailable!')
+        return redirect('/webprofile')
 
 # ##-----------------------------------------------------------------------## #
 # ##-----------------END--UNASSIGN--EMPLOYEE-FROM-STATION------------------## #
@@ -768,6 +791,7 @@ def unassignStation(request):
 # ##-----------------------------------------------------------------------## #
 # ##---------------------------VIEW_CLIENTS--------------------------------## #
 # ##-----------------------------------------------------------------------## #
+
 
 @login_required
 def view_clients(request):
