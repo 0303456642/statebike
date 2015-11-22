@@ -44,26 +44,24 @@ class Admin(SBikeUser):
 
 class Employee(SBikeUser):
     is_assigned = models.BooleanField(default=False)
+
     def __str__(self):
         return str(self.user.username)
-    pass
 
 
 class Station(models.Model):
     employee = models.ForeignKey(Employee, null=True, blank=True)
     name = models.CharField(max_length=200)
     address = models.CharField(max_length=200)
-    stock = models.IntegerField(blank=False)
     capacity = models.IntegerField(blank=False)
 
     def __str__(self):
         return str(self.name)
 
-    def create_station(self, employee, name, address, stock, capacity):
+    def create_station(self, employee, name, address, capacity):
         self.employee = employee
         self.name = name
         self.address = address
-        self.stock = stock
         self.capacity = capacity
         self.save()
 
@@ -71,14 +69,12 @@ class Station(models.Model):
         self.employee = employee
         self.save()
 
-    def remove_from_stock(self):
-        self.stock = self.stock - 1
-        self.save()
-        return self.stock == 0
+    def stock(self):
+        args = {'state': 'AV', 'station': self}
+        return len(Bike.objects.filter(**args))
 
-    def add_to_stock(self):
-        self.stock = self.stock + 1
-        self.save()
+    def total_stock(self):
+        return len(Bike.objects.filter(station=self))
 
 
 class Bike(models.Model):

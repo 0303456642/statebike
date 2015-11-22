@@ -136,7 +136,5 @@ class CreateStationForm(forms.Form):
         attrs={'class': 'form-control', 'placeholder': 'Name'}))
     address = forms.CharField(max_length=100, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Address'}))
-    stock = forms.IntegerField(widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Stock'}))
     capacity = forms.IntegerField(widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Capacity'}))
