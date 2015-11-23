@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import Client
 from .models import Station
 
+
 class RegisterForm(forms.Form):
     username = forms.CharField(min_length=6, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Username'}))
@@ -152,4 +153,4 @@ class CreateStationForm(forms.Form):
         address = self.cleaned_data.get('address')
         if not(address is None) and Station.objects.filter(address=address):
             raise forms.ValidationError('Ya se ha registrado ese nombre')
-        return address    
+        return address
