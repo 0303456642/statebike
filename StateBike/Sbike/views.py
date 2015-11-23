@@ -257,6 +257,8 @@ def logoutView(request):
 
 @login_required
 def stationProfile(request):
+    if request.session['type'] == 'web':
+        return redirect('/webprofile')
     username = request.user.get_username()
     clients = Client.objects.filter(user__username=username)
 
@@ -396,7 +398,7 @@ def bikeLoan(request):
         bikes = Bike.objects.filter(state='AV',
                                     station_id=request.session['station'])
     except KeyError:
-        messages.error(request, 'You must be logged from a station!')
+        messages.error(request, 'You Must Be Logged From A Station!')
         return redirect('/stationlogin/')
 
     if len(bikes) == 0:
