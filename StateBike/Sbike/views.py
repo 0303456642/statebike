@@ -827,9 +827,8 @@ def viewClients(request, username=''):
 # ##----------------------------ADD-BIKE-----------------------------------## #
 # ##-----------------------------------------------------------------------## #
 def addBike(request):
-    user_type = request.session['user_type']
 
-    if user_type == 'admin':
+    if request.session['user_type'] == 'admin':
         if request.method == 'POST':
             stationD = request.POST.get('select')
             bikeamount = request.POST.get('input')
@@ -859,10 +858,12 @@ def addBike(request):
             return redirect('/webprofile')
 
         return render(request, 'Sbike/add_bike.html', {'stations': station})
-    else:
-        messages.error(request, 'This Content is Unavailable!')
+    
+    
+    messages.error(request, 'This Content is Unavailable!')
+    if request.session['type'] == 'station':
         return redirect('/stationprofile')
-
+    return redirect('/webprofile')
 # ##-----------------------------------------------------------------------## #
 # ##--------------------------END-ADD-BIKE---------------------------------## #
 # ##-----------------------------------------------------------------------## #
@@ -923,4 +924,66 @@ def employeeRegister(request):
 
 # ##-----------------------------------------------------------------------## #
 # ##-------------------END--REGISTER--EMPLOYEE-----------------------------## #
+# ##-----------------------------------------------------------------------## #
+
+# ##-----------------------------------------------------------------------## #
+# ##-----------------------------MOVE--BIKES-------------------------------## #
+# ##-----------------------------------------------------------------------## #
+
+@login_required
+def moveBike(request):
+    if (request.session['user_type'] == 'admin'):
+        if request.method == 'POST':
+
+            station_from_id = request.POST.get('select_from')
+            station_to_id = request.POST.get('select_to')
+            bikes_to_move = request.POST.get('max_bikes')
+
+            if station_from_id is not None:
+                station_from = Station.objects.filter(id=station_from_id).first()
+                request.session['station_from'] = station_from_id
+            #PENSAR EN CASO NONE
+                stations_to = Station.objects.all()
+                stations_to = stations_to.exclude(id=station_from_id)
+                return render(request, 'Sbike/move_bike.html', {'stations_to' : stations_to})
+            
+            if station_to_id is not None:
+                station_to = Station.objects.filter(id=station_to_id).first()
+                request.session['station_to'] = station_to_id
+
+                capacity_to = station_to.capacity
+                stock_to = station_to.total_stock()
+                station_from = Station.objects.filter(id=request.session['station_from']).first()
+                max_bikes_from = station_from.stock()
+                bikes = capacity_to - stock_to - max_bikes_from
+                if bikes < 0:
+                    max_bikes = capacity_to - stock_to
+                else:
+                    max_bikes = max_bikes_from
+
+                return render(request, 'Sbike/move_bike.html', {'max_bikes': list(range(max_bikes + 1))})
+
+            if bikes_to_move is not None:
+                station_from = Station.objects.filter(id=request.session['station_from']).first()
+                station_to = Station.objects.filter(id=request.session['station_to']).first()
+                args = { 'state': 'AV', 'station' : station_from }
+                bikes = Bike.objects.filter(**args)[:int(bikes_to_move)]
+                for bike in bikes:
+                    bike.station = station_to
+                    bike.save()
+                messages.success(request, 'Successfully! ' + str(bikes_to_move) + 'Bikes Moved!')
+                return redirect('/webprofile')
+
+        stations_from = Station.objects.all()
+        return render(request, 'Sbike/move_bike.html', {'stations_from' : stations_from})
+
+    else:
+        messages.error(request, 'Access Restricted Only To Admin!')
+        if (request.session['type'] == 'web'):
+            return redirect('/webprofile')
+        else:
+            return redirect('/stationprofile')
+
+# ##-----------------------------------------------------------------------## #
+# ##------------------------END--MOVE--BIKES-------------------------------## #
 # ##-----------------------------------------------------------------------## #

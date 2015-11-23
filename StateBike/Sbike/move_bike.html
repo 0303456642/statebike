@@ -3,23 +3,34 @@
 {% block title %}Move Bike{% endblock title %}
 
 {% block content %}
-<form method="post" action="">
-  	{% csrf_token %}
-	From Station
-   	<select name="select1">
-		{% for queue in stations %}
-            	<option value="{{ queue.id }}">{{ queue.name }}</option>
+
+<form method="post" id="stationform">
+	{% csrf_token %}
+	{% if stations_from %}
+		<h2>From Station</h2>
+		<select name="select_form" class="form-control" form="stationform">
+		{% for station in stations_from %}
+	  		<option value={{station.id}} >{{station.name}}</option>
 		{% endfor %}
-	</select>
-	To Station
-	<select name="select2">
-		{% for queue in stations %}
-				<option value="{{ queue.id}}">{{ queue.name }}</option>
+		</select>
+	{% elif stations_to %}
+		<h2>To Station</h2>
+		<select name="select_to" class="form-control" form="stationform">
+		{% for station in stations_to %}
+	  		<option value={{station.id}} >{{station.name}}</option>
 		{% endfor %}
-	</select>
-	Move 
-	<input type = "number" name = "select3">
-	Bikes 
-	<input type="submit" class="btn btn-default" value="Move Bikes" />
+		</select>
+	{% elif max_bikes%}
+		<h2>Bikes:</h2>
+		<select name="max_bikes" class="form-control" form="stationform">
+		{% for i in max_bikes %}
+	  		<option value={{i}} >{{i}}</option>
+		{% endfor %}
+		</select>
+	<input class="btn btn-default" type="submit" value="Move">
+	{% else %}
+	<h1>No Stations Created!</h1>
+	{% endif %}
 </form>
+
 {% endblock content %}
