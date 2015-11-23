@@ -666,7 +666,7 @@ def createStation(request):
             form = CreateStationForm(request.POST)
             if form.is_valid():
                 cleaned_data = form.cleaned_data
-                
+
                 name = form.clean_name()
                 address = form.clean_address()
                 capacity = cleaned_data.get('capacity')
@@ -675,8 +675,8 @@ def createStation(request):
                 station.create_station(name, address, capacity)
                 messages.success(request, 'Station Successfully Created!')
                 return redirect('/webprofile')
-            else :
-                messages.error(request, 'Station Name / Adress Exists Already.')
+            else:
+                messages.error(request, 'Station Name / Adress Exists Already')
 
                 return redirect('/createstation')
 
@@ -880,7 +880,7 @@ def addBike(request):
             stationDes = Station.objects.filter(id=stationD)[0]
             stockAll = stationDes.total_stock()
 
-            if bikeamount  == '':
+            if bikeamount == '':
                 messages.error(request, 'Please Enter a Number')
                 return redirect('/addbikes')
 
@@ -891,12 +891,14 @@ def addBike(request):
                         bike.station = stationDes
                         bike.save()
                     messages.success(
-                        request, str(i+1) + ' Bikes Created In ' + stationDes.name)
+                        request,
+                        str(i+1) + ' Bikes Created In ' + stationDes.name)
                     return redirect('/webprofile')
                 else:
                     msg0 = ' Just Have ' + str(stationDes.capacity - stockAll)
                     msg = msg0 + ' Spaces Empty'
-                    messages.error(request, 'The Station ' + stationDes.name + msg)
+                    messages.error(
+                        request, 'The Station ' + stationDes.name + msg)
 
             except UnboundLocalError:
                 messages.error(request, 'Invalid Input For Amount')
@@ -908,8 +910,7 @@ def addBike(request):
             return redirect('/webprofile')
 
         return render(request, 'Sbike/add_bike.html', {'stations': station})
-    
-    
+
     messages.error(request, 'This Content is Unavailable!')
     if request.session['type'] == 'station':
         return redirect('/stationprofile')
@@ -984,8 +985,8 @@ def employeeRegister(request):
 def employeeConsult(request):
     employee_consult = Employee.objects.get(user=request.user)
     station_consult = Station.objects.filter(employee=employee_consult)
-    bikes = Bike.objects.filter(station = station_consult)
-    return render(request, 'Sbike/employee_consult.html', { 'bikes' : bikes })
+    bikes = Bike.objects.filter(station=station_consult)
+    return render(request, 'Sbike/employee_consult.html', {'bikes': bikes})
 
 # ##-----------------------------------------------------------------------## #
 # ##-------------------END--EMPLOYEE--CONSULT--HIS--STATIONS---------------## #
@@ -994,6 +995,7 @@ def employeeConsult(request):
 # ##-----------------------------------------------------------------------## #
 # ##-----------------------------MOVE--BIKES-------------------------------## #
 # ##-----------------------------------------------------------------------## #
+
 
 @login_required
 def moveBike(request):
@@ -1005,20 +1007,24 @@ def moveBike(request):
             bikes_to_move = request.POST.get('max_bikes')
 
             if station_from_id is not None:
-                station_from = Station.objects.filter(id=station_from_id).first()
+                station_from = Station.objects.filter(
+                    id=station_from_id).first()
                 request.session['station_from'] = station_from_id
 
                 stations_to = Station.objects.all()
                 stations_to = stations_to.exclude(id=station_from_id)
-                return render(request, 'Sbike/move_bike.html', {'stations_to' : stations_to})
-            
+                return render(
+                    request, 'Sbike/move_bike.html',
+                    {'stations_to': stations_to})
+
             if station_to_id is not None:
                 station_to = Station.objects.filter(id=station_to_id).first()
                 request.session['station_to'] = station_to_id
 
                 capacity_to = station_to.capacity
                 stock_to = station_to.total_stock()
-                station_from = Station.objects.filter(id=request.session['station_from']).first()
+                station_from = Station.objects.filter(
+                    id=request.session['station_from']).first()
                 max_bikes_from = station_from.stock()
                 bikes = capacity_to - stock_to - max_bikes_from
                 if bikes < 0:
@@ -1026,21 +1032,26 @@ def moveBike(request):
                 else:
                     max_bikes = max_bikes_from
 
-                return render(request, 'Sbike/move_bike.html', {'max_bikes': list(range(max_bikes + 1))})
+                return render(
+                    request, 'Sbike/move_bike.html',
+                    {'max_bikes': list(range(max_bikes + 1))})
 
             if bikes_to_move is not None:
-                station_from = Station.objects.filter(id=request.session['station_from']).first()
-                station_to = Station.objects.filter(id=request.session['station_to']).first()
-                args = { 'state': 'AV', 'station' : station_from }
+                station_from = Station.objects.filter(
+                    id=request.session['station_from']).first()
+                station_to = Station.objects.filter(
+                    id=request.session['station_to']).first()
+                args = {'state': 'AV', 'station': station_from}
                 bikes = Bike.objects.filter(**args)[:int(bikes_to_move)]
                 for bike in bikes:
                     bike.station = station_to
                     bike.save()
-                messages.success(request, 'Successfully! ' + str(bikes_to_move) + 'Bikes Moved!')
+                messages.success(request, str(bikes_to_move) + 'Bikes Moved!')
                 return redirect('/webprofile')
 
         stations_from = Station.objects.all()
-        return render(request, 'Sbike/move_bike.html', {'stations_from' : stations_from})
+        return render(
+            request, 'Sbike/move_bike.html', {'stations_from': stations_from})
 
     else:
         messages.error(request, 'Access Restricted Only To Admin!')
@@ -1058,8 +1069,9 @@ def moveBike(request):
 # ##------------------------ABOUT-STATEBIKES-------------------------------## #
 # ##-----------------------------------------------------------------------## #
 
+
 def about(request):
-    return render (request, 'Sbike/about.html')
+    return render(request, 'Sbike/about.html')
 # ##-----------------------------------------------------------------------## #
 # ##------------------------ABOUT-STATEBIKES-------------------------------## #
 # ##-----------------------------------------------------------------------## #
@@ -1068,11 +1080,9 @@ def about(request):
 # ##-------------------------------CONTACT---------------------------------## #
 # ##-----------------------------------------------------------------------## #
 
+
 def contact(request):
-    return render (request, 'Sbike/contact.html')
+    return render(request, 'Sbike/contact.html')
 # ##-----------------------------------------------------------------------## #
 # ##-----------------------------END--CONTACT------------------------------## #
 # ##-----------------------------------------------------------------------## #
-
-
-
