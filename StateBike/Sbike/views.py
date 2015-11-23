@@ -622,8 +622,6 @@ def createStation(request):
 
     if user_type == 'admin':
         if request.method == 'POST':
-            employee_dni = request.POST.get('select')
-            employee = Employee.objects.get(dni=employee_dni)
             form = CreateStationForm(request.POST)
             if form.is_valid():
                 cleaned_data = form.cleaned_data
@@ -632,21 +630,14 @@ def createStation(request):
                 capacity = cleaned_data['capacity']
 
                 station = Station()
-                station.create_station(employee, name, address, capacity)
+                station.create_station(name, address, capacity)
                 messages.success(request, 'Station Successfully Created!')
 
                 return redirect('/webprofile')
 
-        employees = Employee.objects.all()
-
-        if not employees.exists():
-            messages.error(request, 'No registered Employee!')
-            return redirect('/webprofile')
-
         form = CreateStationForm()
         context = {
             'form': form,
-            'employees': employees
         }
 
         return render(request, 'Sbike/create_station.html', context)

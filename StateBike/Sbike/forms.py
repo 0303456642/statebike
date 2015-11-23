@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import Client
+from .models import Station
 
 class RegisterForm(forms.Form):
     username = forms.CharField(min_length=6, widget=forms.TextInput(
@@ -138,3 +139,10 @@ class CreateStationForm(forms.Form):
         attrs={'class': 'form-control', 'placeholder': 'Address'}))
     capacity = forms.IntegerField(widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Capacity'}))
+
+    def clean_name(self):
+        """Comprueba que no existe el mismo nombre en la db"""
+        name = self.cleaned_data['name']
+        if not(name is None) and Station.objects.filter(name=name):
+            raise forms.ValidationError('Ya se ha registrado ese nombre')
+        return name    
