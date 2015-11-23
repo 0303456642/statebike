@@ -18,13 +18,13 @@ from django.contrib import admin
 from Sbike import views
 
 urlpatterns = [
-    
+
     url(r'^$', views.home),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^home/$',views.home, name='home'),
+    url(r'^home/$', views.home, name='home'),
     url(r'^weblogin/$', views.webLoginView, name='web_login'),
     url(r'^logout/$', views.logoutView, name='logout'),
-    url(r'^stationlogin/$', views.stationLoginView, name='station_login'),    
+    url(r'^stationlogin/$', views.stationLoginView, name='station_login'),
     url(r'^register/$', views.clientRegisterView, name='client_register'),
     url(r'^stations/$', views.locatorView),
     url(r'^stationprofile/$', views.stationProfile),
@@ -33,6 +33,20 @@ urlpatterns = [
     url(r'^editprofile/phone$', views.ClientEditPhone),
     url(r'^editprofile/email$', views.ClientEditEmail),
     url(r'^webprofile/$', views.webProfile),
+    url(r'^setstatus/$', views.setBikeStatus),
     url(r'^bikeloan/$', views.bikeLoan),
-    url(r'^giveback/$', views.givebackView)
+    url(r'^giveback/$', views.givebackView),
+    url(r'^assignemployee/$', views.assignEmployee),
+    url(r'^unassignemployee/$', views.unassignEmployee),
+    url(r'^assignstation/$', views.assignStation),
+    url(r'^unassignstation/$', views.unassignStation),
+    url(r'^createstation/$', views.createStation),
+    url(r'^viewclients/$', views.viewClients),
+    url(r'^viewclients/(?P<username>.+)/$', views.viewClients),
+    url(r'^movebike/$', views.moveBike),
+    url(r'^addbikes/$', views.addBike),
+    url(r'^employeeregister/$', views.employeeRegister),
+    url(r'^about/$', views.about),
+    url(r'^contact/$', views.contact),
+    url(r'^employeeconsult/$', views.employeeConsult)
 ]
