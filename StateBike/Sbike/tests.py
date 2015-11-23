@@ -2,7 +2,7 @@
 from django.test import TestCase, Client
 from Sbike import views
 from django.contrib.auth.models import User
-from .models import Client as OurClient, Admin, Employee, Station
+from .models import Client as OurClient, Admin, Employee, Station, Bike
 import os, re
 
 # Create your tests here.
@@ -12,29 +12,32 @@ APP_NAME = 'Sbike'
 class Accesos(TestCase):
 
     formValid = {
-        'username' : 'pepeloco',
-        'password1' : 'pepeelmascapo',
-        'password2' : 'pepeelmascapo',
-        'first_name' : 'Pepe',
-        'last_name' : 'Loco',
-        'email' : 'pepe@loco.com',
-        'phone_number' : '3511234567',
-        'dni' : '0303456',
-        'card_number' : '938765451673',
-        'expiration_date' : '2015-05-30',
-        'security_code' : '642'
+        'username': 'pepeloco',
+        'password1': 'pepeelmascapo',
+        'password2': 'pepeelmascapo',
+        'first_name': 'Pepe',
+        'last_name': 'Loco',
+        'email': 'pepe@loco.com',
+        'phone_number': '3511234567',
+        'dni': '0303456',
+        'card_number': '938765451673',
+        'expiration_date': '2015-05-30',
+        'security_code': '642'
     }
 
     templates = {
-        'home' : 'home.html',
-        'register' : 'client_register.html',
-        'weblogin' : 'web_login.html',
-        'stationlogin' : 'station_login.html',
-        'clientprofile' : 'client_profile.html',
-        'emplprofile' : 'employee_profile.html',
-        'admprofile' : 'admin_profile.html',
-        'stationprofile' : 'station_profile.html',
-        'stations' : 'stations.html'
+        'home': 'home.html',
+        'register': 'client_register.html',
+        'weblogin': 'web_login.html',
+        'stationlogin': 'station_login.html',
+        'clientprofile': 'client_profile.html',
+        'emplprofile': 'employee_profile.html',
+        'admprofile': 'admin_profile.html',
+        'stationprofile': 'station_profile.html',
+        'stations': 'stations.html',
+        'bikeloan': 'bike_loan.html',
+        'giveback': 'give_back.html',
+        'editpass': 'client_edit.html'
     }
 
     def test_home(self):
@@ -49,7 +52,7 @@ class Accesos(TestCase):
         # creamos un cliente
         c = Client()
         # follow es para seguir los redireccionamientos
-        res = c.get('/register', follow = True)
+        res = c.get('/register', follow=True)
 
         # deberia devolver la register page
         self.assertTrue(self.is_template(res, self.templates['register']))
@@ -62,13 +65,13 @@ class Accesos(TestCase):
         form = {
             'username' : 'a'
         }
-        res = c.post('/register/', form, follow = True)
+        res = c.post('/register/', form, follow=True)
 
         # deberiamos obtener otra vez la pagina de registro
         self.assertTrue(self.is_template(res, self.templates['register']))
         
         # Ahora cramos un formulario valido
-        res = c.post('/register/', self.formValid, follow = True)
+        res = c.post('/register/', self.formValid, follow=True)
 
         # deberiamos obtener el login
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
@@ -103,7 +106,7 @@ class Accesos(TestCase):
 
 
         # ahora nos registramos 
-        res = c.post('/register/', self.formValid, follow = True)        
+        res = c.post('/register/', self.formValid, follow=True)        
 
         # deberiamos obtener el weblogin
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
@@ -161,7 +164,7 @@ class Accesos(TestCase):
         self.assertTrue(self.is_template(res, self.templates['stationlogin']))
 
         # ahora nos registramos 
-        res = c.post('/register/', self.formValid, follow = True)
+        res = c.post('/register/', self.formValid, follow=True)
 
         # y ahora intentamos loguearnos bien
         res = c.post('/stationlogin/',
@@ -185,7 +188,7 @@ class Accesos(TestCase):
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
 
         # nos registramos y logueamos
-        res = c.post('/register/', self.formValid, follow = True)
+        res = c.post('/register/', self.formValid, follow=True)
         res = c.post('/weblogin/',
                      {'username': self.formValid['username'],
                       'password': self.formValid['password1']},
@@ -206,7 +209,7 @@ class Accesos(TestCase):
         self.createStation('San Martin', self.createEmployee('carlos123', 'carlitos'))
 
         # nos registramos
-        res = c.post('/register/', self.formValid, follow = True)
+        res = c.post('/register/', self.formValid, follow=True)
 
         # nos logueamos en la estacion
         res = c.post('/stationlogin/',
@@ -218,7 +221,7 @@ class Accesos(TestCase):
         self.assertTrue(self.is_template(res, self.templates['stationprofile']))
 
         # cerramos sesion
-        res = c.get('/logout', follow = True)
+        res = c.get('/logout', follow=True)
 
         # deberiamos terminar en la pagina de station login
         self.assertTrue(self.is_template(res, self.templates['stationlogin']))
@@ -233,7 +236,7 @@ class Accesos(TestCase):
         self.assertTrue(self.is_template(res, self.templates['clientprofile']))
 
         # cerramos sesion
-        res = c.get('/logout', follow = True)
+        res = c.get('/logout', follow=True)
 
         # deberiamos terminar en la pagina de web login
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
@@ -243,26 +246,26 @@ class Accesos(TestCase):
         c = Client()
 
         # intentamos obtener webprofile sin login
-        res = c.get('/webprofile', follow = True)
+        res = c.get('/webprofile', follow=True)
 
         # deberiamos terminar en la pagina de web login
         self.assertTrue(self.is_template(res, self.templates['weblogin']))
 
         # nos registramos
-        res = c.post('/register/', self.formValid, follow = True)
+        res = c.post('/register/', self.formValid, follow=True)
 
         # nos logueamos y vamos a webprofile
         res = c.post('/weblogin/',
                      {'username': self.formValid['username'],
                       'password': self.formValid['password1']},
                      follow=True)
-        res = c.get('/webprofile', follow = True)
+        res = c.get('/webprofile', follow=True)
         
         # deberiamos terminar en la pagina de client profile
         self.assertTrue(self.is_template(res, self.templates['clientprofile']))
 
         # cerramos sesion
-        res = c.get('/logout', follow = True)
+        res = c.get('/logout', follow=True)
 
         # Ahora como empleado
         self.createEmployee('amigo123', 'empanada')
@@ -275,7 +278,7 @@ class Accesos(TestCase):
         self.assertTrue(self.is_template(res, self.templates['emplprofile']))
 
         # cerramos sesion
-        res = c.get('/logout', follow = True)
+        res = c.get('/logout', follow=True)
 
         # Ahora como admin
         self.createAdmin('eladmin', 'bariloche')
@@ -288,12 +291,190 @@ class Accesos(TestCase):
         self.assertTrue(self.is_template(res, self.templates['admprofile']))
 
     def test_bike_loan(self):
-        pass
 
-    def createStation(self, name, empl):
+        c = Client()
+
+        # crear estacion
+        stat = self.createStation('San Martin', self.createEmployee('carlos123', 'carlitos'))
+        # agregarle unas bicicletas
+        self.addBicycles(stat, 5)
+
+        # intentamos obtener la pagina de prestamos sin login
+        res = c.get('/bikeloan', follow=True)
+
+        # deberiamos obtener el weblogin
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+        # registrarse, loguearse por weblogin
+        res = c.post('/register/', self.formValid, follow=True)
+
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+        # intentemos obtener pagina de prestamos
+        res = c.get('/bikeloan', follow=True)
+
+        # deberiamos terminar en stationlogin (porque iniciamos en weblogin)
+        self.assertTrue(self.is_template(res, self.templates['stationlogin']))
+
+        # ahora iniciemos en stationlogin
+        res = c.post('/stationlogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+
+        self.assertTrue(self.is_template(res, self.templates['stationprofile']))
+
+        # intentemos otra vez
+        res = c.get('/bikeloan', follow=True)
+
+        # deberiamos terminar en bikeloan
+        self.assertTrue(self.is_template(res, self.templates['bikeloan']))
+
+        # veamos que bicis tenemos para pedir
+        options = find_between(res.content, '<select name="select" class="form-control" form="bikesform">', '</select>')
+        if not options:
+            self.fail('no tengo bicicletas para pedir')
+
+
+        # pedimos la primera
+        try:
+            my_option = find_between(res.content, '<option value=', '>')
+            my_option = int(my_option)
+            my_option = str(my_option)
+        except:
+            self.fail('no tengo bici para pedir')
+
+        res = c.post('/bikeloan/', {'select': my_option}, follow=True)
+
+        # nos deberia llevar a stationprofile
+        self.assertTrue(self.is_template(res, self.templates['stationprofile']))
+
+        # con un msj de que el prestamo se ejecuto correctamente
+        try:
+            res.content.index('Loan: Bike '+my_option)
+        except ValueError:
+            self.fail('Mensaje de prestamo no encontrado')
+
+    def test_give_back(self):
+        c = Client()
+
+        # crear estacion
+        stat = self.createStation('San Martin', self.createEmployee('carlos123', 'carlitos'))
+        # agregarle unas bicicletas
+        self.addBicycles(stat, 5)
+
+        # intentamos obtener la pagina de devolucion sin login
+        res = c.get('/giveback', follow=True)
+
+        # deberiamos obtener el weblogin
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+        # registrarse, loguearse por weblogin
+        res = c.post('/register/', self.formValid, follow=True)
+
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+        # intentemos obtener pagina de devolucion
+        res = c.get('/giveback', follow=True)
+
+        # deberiamos terminar en stationlogin (porque iniciamos en weblogin)
+        self.assertTrue(self.is_template(res, self.templates['stationlogin']))
+
+        # ahora iniciemos en stationlogin
+        res = c.post('/stationlogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+
+        self.assertTrue(self.is_template(res, self.templates['stationprofile']))
+
+        # intentemos otra vez
+        res = c.get('/giveback', follow=True)
+
+        # deberiamos terminar en giveback
+        self.assertTrue(self.is_template(res, self.templates['giveback']))
+
+        # cual es la bici que tengo para devolver
+        # ..................................................
+
+    def test_edit_passw(self):
+
+        c = Client()
+
+       # intentamos obtener la pagina sin login
+        res = c.get('/editpassword', follow=True)
+
+        # deberiamos obtener el weblogin
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+        # registrarse, loguearse por weblogin
+        res = c.post('/register/', self.formValid, follow=True)
+
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+        # intentemos obtener la pagina
+        res = c.get('/editpassword', follow=True)
+
+        # deberiamos terminar en editpass
+        self.assertTrue(self.is_template(res, self.templates['editpass']))
+
+        # llenar el formulario
+        res = c.post('/editpassword/',
+                     {'password1': 'lanuevapass',
+                      'password2': 'lanuevapass'},
+                     follow=True)
+
+        # deberiamos terminar en weblogin con un msj
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+        try:
+            res.content.index('Password Changed Successfully')
+        except ValueError:
+            self.fail('Mensaje de cambio de contraseña no encontrado')
+
+        # intentar iniciar sesion con la clave anterior deberia dar error
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+        try:
+            res.content.index('Invalid username')
+        except ValueError:
+            self.fail('Mensaje de error no encontrado')
+
+        # pero iniciar con la clave nueva nos deja en nuestro perfil
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': 'lanuevapass'},
+                     follow=True)
+
+        self.assertTrue(self.is_template(res, self.templates['clientprofile']))
+
+
+    def addBicycles(self, station, num):
+        for i in range(0,num):
+            bk = Bike()
+            bk.state = 'AV'
+            bk.station = station
+            bk.save()
+
+    def createStation(self, name, empl, capacity=10):
 
         station = Station()
-        station.create_station(empl, name, name+ '  123', 5, 10)
+        station.employee =  empl
+        station.create_station(name, name+ '  123', capacity)
 
         return station
 
@@ -347,37 +528,56 @@ class Accesos(TestCase):
         if not known:
             print('Página no conocida')
 
+        msj = find_between(res.content, '<div class="alert alert-danger">', '</div>')
+        msj2 = find_between(res.content, '<div class="alert alert-danger fade in">', '</div>')
+        msj3 = find_between(res.content, '<div class="alert alert-success fade in">', '</div>')
+        if msj:
+            print('Mensaje: ' + msj.strip())
+        if msj2:
+            msj2 = msj2.strip()
+            msj2 = find_between(msj2, '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><center>', '</center>')
+            print('Mensaje: ' + msj2.strip())
+        if msj3:
+            msj3 = find_between(msj3.strip(), '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><center>', '</center>')
+            print('Mensaje: ' + msj3.strip())
+
         f = open('respuesta.html', 'w')
         f.write(res.content)
         print('Respuesta guardada en "respuesta.html"')
 
     def is_template(self, res, filename, details=False):
-        titles_match = self.titles_match(res, filename, details)
+        titles_m = self.titles_match(res, filename, details)
 
         # aca podrian haber otros chequeos ademas de los titulos
 
-        return titles_match
+        return titles_m
 
     def titles_match(self, res, templ, details=False):
 
         template_title = self.get_template_title(templ)
-        title_reg = reg_from_template(template_title)
+        title_regs = map(reg_from_template,template_title)
 
         template_h1 = self.get_template_h1(templ)
-        h1_reg = reg_from_template(template_h1)
+        h1_regs = map(reg_from_template, template_h1)
 
-        bar_title_matchs = bool(title_reg.match(self.get_content_title(res.content)))
+        bar_content = self.get_content_title(res.content)
+        bar_matches = map(lambda reg: bool(reg.match(bar_content)), title_regs)
+        bar_title_matchs = not bar_content or any(bar_matches)
 
-        h1_title_matchs = bool(h1_reg.match(self.get_content_h1(res.content)))
+        h1_content = self.get_content_h1(res.content)
+        h1_matches = map(lambda reg: bool(reg.match(h1_content)), h1_regs)
+        h1_title_matchs = not h1_content or any(h1_matches)
 
         if details:
             print('bar content: "'+ str(self.get_content_title(res.content)) +'"')
-            print('bar template: "'+str(self.get_template_title(templ))+'"')
-            print('bar regexp template: "' + title_reg.pattern + '"')
+            print('bar template: '+str(self.get_template_title(templ)))
+            listofpatterns = map(lambda reg: reg.pattern, title_regs)
+            print('bar regexp template: ' + str(listofpatterns))
 
             print('h1 content: "'+ str(self.get_content_h1(res.content)) +'"')
-            print('h1 template: "'+str(self.get_template_h1(templ))+'"')
-            print('h1 regexp template: "' + h1_reg.pattern + '"')
+            print('h1 template: '+str(self.get_template_h1(templ)))
+            listofpatterns = map(lambda reg: reg.pattern, h1_regs)
+            print('h1 regexp template: ' + str(listofpatterns))
 
         return bar_title_matchs and h1_title_matchs
 
@@ -395,14 +595,22 @@ class Accesos(TestCase):
         return find_between(cont, '<title>', '</title>')
 
 
-
 def get_template_string(templ, string1, string2):
     f =  open(APP_NAME + '/' + templ, 'r')
     template = f.read()
 
-    return find_between(template, string1, string2)
+    strings = []
+    while True:
+        (s, end) = find_between(template, string1, string2, details=True)
+        if not s:
+            break
+        strings.append(s)
+        template = template[end:]
 
-def find_between(s, first, last):
+    return strings
+
+
+def find_between(s, first, last, details=False):
     try:
         start = s.index(first) + len(first)
         end = s.index(last, start)
@@ -413,10 +621,16 @@ def find_between(s, first, last):
         if string[-1] == ' ':
             string = string[:-1]
 
-        return string
+        if details:
+            return (string, end)
+        else:
+            return string
 
     except ValueError:
-        return ""
+        if details:
+            return ('', 0)
+        else:
+            return ""
 
 
 def reg_from_template(string):
