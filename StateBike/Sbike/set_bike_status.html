@@ -5,13 +5,15 @@
 {% block content %}
 <form method="post" action="">
     {% csrf_token %}
-    Bikes Broken on your stations: 
+
+    {% if brokenbikes %}
+    <h2>Broken:</h2>
     <br>
-    <table width=300>
+        <table class="table table-hover" border="0" align="center" width=300>
         <tr>
-            <th scope="col" width=100>select </th>
-            <th scope="col" width=100>id</th>
-            <th scope="col" width=100>station</th>
+            <th scope="col" width=100>Select </th>
+            <th scope="col" width=100>Id</th>
+            <th scope="col" width=100>Station</th>
         </tr>
         {% for bike in brokenbikes %}
             <tr>
@@ -21,13 +23,16 @@
             </tr>
         {% endfor %}
     </table>
+
     <input type="submit" class="btn btn-default" name = "Action" value="Repair" />
-    Bikes Available on your stations: <br>
-    <table width=300>
+    {% endif %}
+    {% if availablebikes %}
+    <h2>Available</h2><br>
+    <table class="table table-hover" border="0" align="center" width=300>
         <tr>
-            <th scope="col" width=100>select </th>
-            <th scope="col" width=100>id</th>
-            <th scope="col" width=100>station</th>
+            <th scope="col" width=100>Select </th>
+            <th scope="col" width=100>Id</th>
+            <th scope="col" width=100>Station</th>
         </tr>
         {% for bike in availablebikes %}
             <tr>
@@ -37,6 +42,9 @@
             </tr>
         {% endfor %}
     </table>
-    <input type="submit" class="btn btn-default" name = "Action" value="Set as broken" />
+    <input type="submit" class="btn btn-default" name = "Action" value="Set As Broken" />
+    {% endif %}
+    <a class="btn btn-default "href="/webprofile">Back</a>
+
 </form>
 {% endblock content %}

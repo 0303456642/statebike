@@ -34,15 +34,12 @@
             {% elif request.session.type = 'station' %}
             <li class="active"><a href="/stationprofile">Profile <span class="glyphicon glyphicon-user"></span></a></li>
             {% endif %}
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
               {% if user.is_authenticated %}
                   <li><a href="#"> {{user.username}} </a></li>
-                  {% if user.is_staff %}
-                      <li><a href="/notifications">Notifications <span class="glyphicon glyphicon-globe"></span></a></li>
-                  {% endif %}
                   <li><a href="/logout">Logout <span class = "glyphicon glyphicon-log-out"></span></a></li>
               {% else %}
                   <li><a href="/register">Register</a></li>

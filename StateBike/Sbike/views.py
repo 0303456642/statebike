@@ -616,13 +616,13 @@ def setBikeStatus(request):
                 bike = Bike.objects.get(id=bike_id)
                 if action == 'Repair':
                     bike.state = 'AV'
-                    messages.success(request, 'bike repaired!')
-                elif action == 'Set as broken':
+                    messages.success(request, 'Bike Repaired!')
+                elif action == 'Set As Broken':
                     bike.state = 'BR'
-                    messages.success(request, 'bike not longer available!')
+                    messages.success(request, 'Bike Not Longer Available!')
                 bike.save()
             except Bike.DoesNotExist:
-                messages.error(request, 'that bike not exist!')
+                messages.error(request, 'Select A Bike!')
 
         # obtener solo las bicis rotas que estan
         # en estaciones a cargo del empleado
@@ -638,7 +638,7 @@ def setBikeStatus(request):
                 broken = Bike.objects.filter(**filterargsB)
                 context['brokenbikes'].extend(list(broken))
         except Bike.DoesNotExist:
-            messages.error(request, 'not are bikes here')
+            messages.error(request, 'Not Are Bikes Here')
 
         return render(request, 'Sbike/set_bike_status.html', context)
     except Employee.DoesNotExist:
@@ -664,15 +664,19 @@ def createStation(request):
             form = CreateStationForm(request.POST)
             if form.is_valid():
                 cleaned_data = form.cleaned_data
-                name = cleaned_data['name']
-                address = cleaned_data['address']
-                capacity = cleaned_data['capacity']
+                
+                name = form.clean_name()
+                address = form.clean_address()
+                capacity = cleaned_data.get('capacity')
 
                 station = Station()
                 station.create_station(name, address, capacity)
                 messages.success(request, 'Station Successfully Created!')
-
                 return redirect('/webprofile')
+            else :
+                messages.error(request, 'Station Name / Adress Exists Already.')
+
+                return redirect('/createstation')
 
         form = CreateStationForm()
         context = {
@@ -1046,3 +1050,27 @@ def moveBike(request):
 # ##-----------------------------------------------------------------------## #
 # ##------------------------END--MOVE--BIKES-------------------------------## #
 # ##-----------------------------------------------------------------------## #
+
+
+# ##-----------------------------------------------------------------------## #
+# ##------------------------ABOUT-STATEBIKES-------------------------------## #
+# ##-----------------------------------------------------------------------## #
+
+def about(request):
+    return render (request, 'Sbike/about.html')
+# ##-----------------------------------------------------------------------## #
+# ##------------------------ABOUT-STATEBIKES-------------------------------## #
+# ##-----------------------------------------------------------------------## #
+
+# ##-----------------------------------------------------------------------## #
+# ##-------------------------------CONTACT---------------------------------## #
+# ##-----------------------------------------------------------------------## #
+
+def contact(request):
+    return render (request, 'Sbike/contact.html')
+# ##-----------------------------------------------------------------------## #
+# ##-----------------------------END--CONTACT------------------------------## #
+# ##-----------------------------------------------------------------------## #
+
+
+
