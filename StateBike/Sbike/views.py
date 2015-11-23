@@ -870,7 +870,7 @@ def addBike(request):
     
     
     messages.error(request, 'This Content is Unavailable!')
-    if request.session['type'] == 'station'
+    if request.session['type'] == 'station':
         return redirect('/stationprofile')
     return redirect('/webprofile')
 # ##-----------------------------------------------------------------------## #
@@ -952,7 +952,6 @@ def moveBike(request):
                 station_from = Station.objects.filter(id=station_from_id).first()
                 request.session['station_from'] = station_from_id
             #PENSAR EN CASO NONE
-            #cambiar a metodo el stock
                 stations_to = Station.objects.all()
                 stations_to = stations_to.exclude(id=station_from_id)
                 return render(request, 'Sbike/move_bike.html', {'stations_to' : stations_to})
@@ -962,9 +961,9 @@ def moveBike(request):
                 request.session['station_to'] = station_to_id
 
                 capacity_to = station_to.capacity
-                stock_to = station_to.stock#STOCK TOTALLLLLL#
+                stock_to = station_to.total_stock()
                 station_from = Station.objects.filter(id=request.session['station_from']).first()
-                max_bikes_from = station_from.stock
+                max_bikes_from = station_from.stock()
                 bikes = capacity_to - stock_to - max_bikes_from
                 if bikes < 0:
                     max_bikes = capacity_to - stock_to
@@ -983,9 +982,9 @@ def moveBike(request):
                     bike.save()
                 messages.success(request, 'Successfully! ' + str(bikes_to_move) + 'Bikes Moved!')
                 return redirect('/webprofile')
-        else:
-            stations_from = Station.objects.all()
-            return render(request, 'Sbike/move_bike.html', {'stations_from' : stations_from})
+
+        stations_from = Station.objects.all()
+        return render(request, 'Sbike/move_bike.html', {'stations_from' : stations_from})
 
     else:
         messages.error(request, 'Access Restricted Only To Admin!')

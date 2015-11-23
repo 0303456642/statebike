@@ -43,6 +43,7 @@ urlpatterns = [
     url(r'^createstation/$', views.createStation),
     url(r'^viewclients/$', views.viewClients),
     url(r'^viewclients/(?P<username>.+)/$', views.viewClients),
+    url(r'^movebike/$', views.moveBike),
     url(r'^addbikes/$', views.addBike),
     url(r'^employeeregister/$', views.employeeRegister)
 ]
