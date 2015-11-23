@@ -10,12 +10,13 @@
     {% endif %}
 
 <h1>View Registered Users  </h1>
-<table id="clients-table">
-<tr> <td>Clients </td> <td> State </td></tr>
+<table class="table table-hover" border="0" align="center">
+<tr> <td><strong>Clients</strong></td> <td><strong>State</strong></td></tr>
   {% for cli in clients %}
     <tr><td><a href="{{ cli.username }}">{{cli.fname}} {{cli.lname}}</a></td><td>{% if cli.sanction %} Sanctioned {% else %} Not sanctioned {% endif %}</td></tr>
   {% endfor %}
 
 </table>
+<a class="btn btn-default "href="/webprofile">OK</a>
 
 {% endblock content %}

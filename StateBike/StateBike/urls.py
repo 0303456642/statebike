@@ -46,5 +46,7 @@ urlpatterns = [
     url(r'^movebike/$', views.moveBike),
     url(r'^addbikes/$', views.addBike),
     url(r'^employeeregister/$', views.employeeRegister),
+    url(r'^about/$', views.about),
+    url(r'^contact/$', views.contact),
     url(r'^employeeconsult/$', views.employeeConsult)
 ]
