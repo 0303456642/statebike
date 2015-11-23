@@ -240,7 +240,7 @@ def stationLoginView(request):
 @login_required
 def logoutView(request):
 
-    messages.success(request, 'You have successfully logged out!')
+    messages.success(request, 'You Have Successfully Logged Out!')
     s_type = request.session['type']
     logout(request)
     if (s_type == 'station'):
