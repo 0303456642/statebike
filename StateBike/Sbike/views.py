@@ -119,21 +119,41 @@ def webLoginView(request):
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
 
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                request.session['type'] = 'web'
-                if Admin.objects.filter(user=user).first() is not None:
-                    request.session['user_type'] = 'admin'
-                elif Employee.objects.filter(user=user).first() is not None:
-                    request.session['user_type'] = 'employee'
+        sanction = Sanction.objects.filter(client__user=user).first()
+
+        if sanction is not None:
+            is_over = sanction.is_over()
+        else:
+            is_over = None
+
+        # si no hay sancion o la sancion es menor y ya pasaron los 5 dias
+        if sanction is None or (sanction.is_minor and is_over):
+
+            # si ya pasaron 5 dias, borrar la sancion
+            if is_over:
+                sanction.delete()
+
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    request.session['type'] = 'web'
+                    employee = Employee.objects.filter(user=user)
+                    if Admin.objects.filter(user=user).first() is not None:
+                        request.session['user_type'] = 'admin'
+                    elif employee.first() is not None:
+                        request.session['user_type'] = 'employee'
+                    else:
+                        request.session['user_type'] = 'client'
+                    return redirect('/webprofile')
                 else:
-                    request.session['user_type'] = 'client'
-                return redirect('/webprofile')
-            else:
-                message = 'Inactive User'
-                return render(request, 'login.html', {'message': message})
-        message = 'Invalid username/password'
+                    message = 'Inactive User'
+                    return render(request, 'login.html', {'message': message})
+            message = 'Invalid username/password'
+
+        else:
+            messages.error(request, 'Sorry! You have a Active Sanction')
+            return redirect('/home')
+
     return render(request, 'Sbike/web_login.html', {'message': message})
 
 # ##-----------------------------------------------------------------------## #
@@ -169,23 +189,42 @@ def stationLoginView(request):
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
 
-        if user is not None:
-            if user.is_active:
-                try:
-                    request.session['station'] = get_random_station()
-                except ValueError:
+        sanction = Sanction.objects.filter(client__user=user).first()
+
+        if sanction is not None:
+            is_over = sanction.is_over()
+        else:
+            is_over = None
+
+        # si no hay sancion o la sancion es menor y ya pasaron los 5 dias
+        if sanction is None or (sanction.is_minor and is_over):
+
+            # si ya pasaron 5 dias, borrar la sancion
+            if is_over:
+                sanction.delete()
+
+            if user is not None:
+                if user.is_active:
+                    try:
+                        request.session['station'] = get_random_station()
+                    except ValueError:
+                        return render(
+                            request, 'Sbike/station_login.html',
+                            {'message': 'There is no existing station'})
+
+                    login(request, user)
+                    request.session['type'] = 'station'
+                    return redirect('/stationprofile')
+                else:
                     return render(
                         request, 'Sbike/station_login.html',
-                        {'message': 'There is no existing station'})
+                        {'message': 'Inactive User'})
+            message = 'Invalid username/password'
 
-                login(request, user)
-                request.session['type'] = 'station'
-                return redirect('/stationprofile')
-            else:
-                return render(
-                    request, 'Sbike/station_login.html',
-                    {'message': 'Inactive User'})
-        message = 'Invalid username/password'
+        else:
+            messages.error(request, 'Sorry! You have a Active Sanction')
+            return redirect('/home')
+
     return render(request, 'Sbike/station_login.html', {'message': message})
 
 
