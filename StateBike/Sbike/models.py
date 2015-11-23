@@ -58,8 +58,7 @@ class Station(models.Model):
     def __str__(self):
         return str(self.name)
 
-    def create_station(self, employee, name, address, capacity):
-        self.employee = employee
+    def create_station(self, name, address, capacity):
         self.name = name
         self.address = address
         self.capacity = capacity
@@ -156,6 +155,11 @@ class Sanction(models.Model):
     def generate_deposition(self, deposition):
         self.deposition = deposition
         self.save()
+
+    def is_over(self):
+        days = timedelta(days=5)
+        dt = self.date + days
+        return dt <= timezone.now()
 
 
 class Notification(models.Model):

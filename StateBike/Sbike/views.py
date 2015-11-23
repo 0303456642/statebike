@@ -119,21 +119,41 @@ def webLoginView(request):
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
 
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                request.session['type'] = 'web'
-                if Admin.objects.filter(user=user).first() is not None:
-                    request.session['user_type'] = 'admin'
-                elif Employee.objects.filter(user=user).first() is not None:
-                    request.session['user_type'] = 'employee'
+        sanction = Sanction.objects.filter(client__user=user).first()
+
+        if sanction is not None:
+            is_over = sanction.is_over()
+        else:
+            is_over = None
+
+        # si no hay sancion o la sancion es menor y ya pasaron los 5 dias
+        if sanction is None or (sanction.is_minor and is_over):
+
+            # si ya pasaron 5 dias, borrar la sancion
+            if is_over:
+                sanction.delete()
+
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    request.session['type'] = 'web'
+                    employee = Employee.objects.filter(user=user)
+                    if Admin.objects.filter(user=user).first() is not None:
+                        request.session['user_type'] = 'admin'
+                    elif employee.first() is not None:
+                        request.session['user_type'] = 'employee'
+                    else:
+                        request.session['user_type'] = 'client'
+                    return redirect('/webprofile')
                 else:
-                    request.session['user_type'] = 'client'
-                return redirect('/webprofile')
-            else:
-                message = 'Inactive User'
-                return render(request, 'login.html', {'message': message})
-        message = 'Invalid username/password'
+                    message = 'Inactive User'
+                    return render(request, 'login.html', {'message': message})
+            message = 'Invalid username/password'
+
+        else:
+            messages.error(request, 'Sorry! You have a Active Sanction')
+            return redirect('/home')
+
     return render(request, 'Sbike/web_login.html', {'message': message})
 
 # ##-----------------------------------------------------------------------## #
@@ -169,23 +189,42 @@ def stationLoginView(request):
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
 
-        if user is not None:
-            if user.is_active:
-                try:
-                    request.session['station'] = get_random_station()
-                except ValueError:
+        sanction = Sanction.objects.filter(client__user=user).first()
+
+        if sanction is not None:
+            is_over = sanction.is_over()
+        else:
+            is_over = None
+
+        # si no hay sancion o la sancion es menor y ya pasaron los 5 dias
+        if sanction is None or (sanction.is_minor and is_over):
+
+            # si ya pasaron 5 dias, borrar la sancion
+            if is_over:
+                sanction.delete()
+
+            if user is not None:
+                if user.is_active:
+                    try:
+                        request.session['station'] = get_random_station()
+                    except ValueError:
+                        return render(
+                            request, 'Sbike/station_login.html',
+                            {'message': 'There is no existing station'})
+
+                    login(request, user)
+                    request.session['type'] = 'station'
+                    return redirect('/stationprofile')
+                else:
                     return render(
                         request, 'Sbike/station_login.html',
-                        {'message': 'There is no existing station'})
+                        {'message': 'Inactive User'})
+            message = 'Invalid username/password'
 
-                login(request, user)
-                request.session['type'] = 'station'
-                return redirect('/stationprofile')
-            else:
-                return render(
-                    request, 'Sbike/station_login.html',
-                    {'message': 'Inactive User'})
-        message = 'Invalid username/password'
+        else:
+            messages.error(request, 'Sorry! You have a Active Sanction')
+            return redirect('/home')
+
     return render(request, 'Sbike/station_login.html', {'message': message})
 
 
@@ -622,8 +661,6 @@ def createStation(request):
 
     if user_type == 'admin':
         if request.method == 'POST':
-            employee_dni = request.POST.get('select')
-            employee = Employee.objects.get(dni=employee_dni)
             form = CreateStationForm(request.POST)
             if form.is_valid():
                 cleaned_data = form.cleaned_data
@@ -632,21 +669,14 @@ def createStation(request):
                 capacity = cleaned_data['capacity']
 
                 station = Station()
-                station.create_station(employee, name, address, capacity)
+                station.create_station(name, address, capacity)
                 messages.success(request, 'Station Successfully Created!')
 
                 return redirect('/webprofile')
 
-        employees = Employee.objects.all()
-
-        if not employees.exists():
-            messages.error(request, 'No registered Employee!')
-            return redirect('/webprofile')
-
         form = CreateStationForm()
         context = {
             'form': form,
-            'employees': employees
         }
 
         return render(request, 'Sbike/create_station.html', context)
@@ -836,9 +866,8 @@ def viewClients(request, username=''):
 # ##----------------------------ADD-BIKE-----------------------------------## #
 # ##-----------------------------------------------------------------------## #
 def addBike(request):
-    user_type = request.session['user_type']
 
-    if user_type == 'admin':
+    if request.session['user_type'] == 'admin':
         if request.method == 'POST':
             stationD = request.POST.get('select')
             bikeamount = request.POST.get('input')
@@ -848,30 +877,37 @@ def addBike(request):
             if bikeamount  == '':
                 messages.error(request, 'Please Enter a Number')
                 return redirect('/addbikes')
-            if (stockAll + int(bikeamount)) <= stationDes.capacity:
-                for i in range(0, int(bikeamount)):
-                    bike = Bike()
-                    bike.station = stationDes
-                    bike.save()
-                messages.success(
-                    request, str(i+1) + ' Bikes Created In ' + stationDes.name)
-                return redirect('/webprofile')
-            else:
-                msg0 = ' Just Have ' + str(stationDes.capacity - stockAll)
-                msg = msg0 + ' Spaces Empty'
-                messages.error(request, 'The Station ' + stationDes.name + msg)
+
+            try:
+                if (stockAll + int(bikeamount)) <= stationDes.capacity:
+                    for i in range(0, int(bikeamount)):
+                        bike = Bike()
+                        bike.station = stationDes
+                        bike.save()
+                    messages.success(
+                        request, str(i+1) + ' Bikes Created In ' + stationDes.name)
+                    return redirect('/webprofile')
+                else:
+                    msg0 = ' Just Have ' + str(stationDes.capacity - stockAll)
+                    msg = msg0 + ' Spaces Empty'
+                    messages.error(request, 'The Station ' + stationDes.name + msg)
+
+            except UnboundLocalError:
+                messages.error(request, 'Invalid Input For Amount')
 
         station = Station.objects.all()
 
         if len(station) == 0:
-            messages.error(request, 'There is no Created Stations!!')
+            messages.error(request, 'There Is No Created Stations!!')
             return redirect('/webprofile')
 
         return render(request, 'Sbike/add_bike.html', {'stations': station})
-    else:
-        messages.error(request, 'This Content is Unavailable!')
+    
+    
+    messages.error(request, 'This Content is Unavailable!')
+    if request.session['type'] == 'station':
         return redirect('/stationprofile')
-
+    return redirect('/webprofile')
 # ##-----------------------------------------------------------------------## #
 # ##--------------------------END-ADD-BIKE---------------------------------## #
 # ##-----------------------------------------------------------------------## #
@@ -949,4 +985,64 @@ def employeeConsult(request):
 # ##-------------------END--EMPLOYEE--CONSULT--HIS--STATIONS---------------## #
 # ##-----------------------------------------------------------------------## #
 
+# ##-----------------------------------------------------------------------## #
+# ##-----------------------------MOVE--BIKES-------------------------------## #
+# ##-----------------------------------------------------------------------## #
 
+@login_required
+def moveBike(request):
+    if (request.session['user_type'] == 'admin'):
+        if request.method == 'POST':
+
+            station_from_id = request.POST.get('select_from')
+            station_to_id = request.POST.get('select_to')
+            bikes_to_move = request.POST.get('max_bikes')
+
+            if station_from_id is not None:
+                station_from = Station.objects.filter(id=station_from_id).first()
+                request.session['station_from'] = station_from_id
+
+                stations_to = Station.objects.all()
+                stations_to = stations_to.exclude(id=station_from_id)
+                return render(request, 'Sbike/move_bike.html', {'stations_to' : stations_to})
+            
+            if station_to_id is not None:
+                station_to = Station.objects.filter(id=station_to_id).first()
+                request.session['station_to'] = station_to_id
+
+                capacity_to = station_to.capacity
+                stock_to = station_to.total_stock()
+                station_from = Station.objects.filter(id=request.session['station_from']).first()
+                max_bikes_from = station_from.stock()
+                bikes = capacity_to - stock_to - max_bikes_from
+                if bikes < 0:
+                    max_bikes = capacity_to - stock_to
+                else:
+                    max_bikes = max_bikes_from
+
+                return render(request, 'Sbike/move_bike.html', {'max_bikes': list(range(max_bikes + 1))})
+
+            if bikes_to_move is not None:
+                station_from = Station.objects.filter(id=request.session['station_from']).first()
+                station_to = Station.objects.filter(id=request.session['station_to']).first()
+                args = { 'state': 'AV', 'station' : station_from }
+                bikes = Bike.objects.filter(**args)[:int(bikes_to_move)]
+                for bike in bikes:
+                    bike.station = station_to
+                    bike.save()
+                messages.success(request, 'Successfully! ' + str(bikes_to_move) + 'Bikes Moved!')
+                return redirect('/webprofile')
+
+        stations_from = Station.objects.all()
+        return render(request, 'Sbike/move_bike.html', {'stations_from' : stations_from})
+
+    else:
+        messages.error(request, 'Access Restricted Only To Admin!')
+        if (request.session['type'] == 'web'):
+            return redirect('/webprofile')
+        else:
+            return redirect('/stationprofile')
+
+# ##-----------------------------------------------------------------------## #
+# ##------------------------END--MOVE--BIKES-------------------------------## #
+# ##-----------------------------------------------------------------------## #
