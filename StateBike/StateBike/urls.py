@@ -45,5 +45,6 @@ urlpatterns = [
     url(r'^viewclients/(?P<username>.+)/$', views.viewClients),
     url(r'^movebike/$', views.moveBike),
     url(r'^addbikes/$', views.addBike),
-    url(r'^employeeregister/$', views.employeeRegister)
+    url(r'^employeeregister/$', views.employeeRegister),
+    url(r'^employeeconsult/$', views.employeeConsult)
 ]
