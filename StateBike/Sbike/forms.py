@@ -142,7 +142,14 @@ class CreateStationForm(forms.Form):
 
     def clean_name(self):
         """Comprueba que no existe el mismo nombre en la db"""
-        name = self.cleaned_data['name']
+        name = self.cleaned_data.get('name')
         if not(name is None) and Station.objects.filter(name=name):
             raise forms.ValidationError('Ya se ha registrado ese nombre')
-        return name    
+        return name
+
+    def clean_address(self):
+        """Comprueba que no existe el mismo nombre en la db"""
+        address = self.cleaned_data.get('address')
+        if not(address is None) and Station.objects.filter(address=address):
+            raise forms.ValidationError('Ya se ha registrado ese nombre')
+        return address    

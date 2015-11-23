@@ -664,15 +664,19 @@ def createStation(request):
             form = CreateStationForm(request.POST)
             if form.is_valid():
                 cleaned_data = form.cleaned_data
-                name = cleaned_data['name']
-                address = cleaned_data['address']
-                capacity = cleaned_data['capacity']
+                
+                name = form.clean_name()
+                address = form.clean_address()
+                capacity = cleaned_data.get('capacity')
 
                 station = Station()
                 station.create_station(name, address, capacity)
                 messages.success(request, 'Station Successfully Created!')
-
                 return redirect('/webprofile')
+            else :
+                messages.error(request, 'Station Name / Adress Exists Already.')
+
+                return redirect('/createstation')
 
         form = CreateStationForm()
         context = {
