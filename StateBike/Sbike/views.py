@@ -933,3 +933,20 @@ def employeeRegister(request):
 # ##-----------------------------------------------------------------------## #
 # ##-------------------END--REGISTER--EMPLOYEE-----------------------------## #
 # ##-----------------------------------------------------------------------## #
+
+# ##-----------------------------------------------------------------------## #
+# ##------------------------EMPLOYEE--CONSULT--HIS--STATIONS---------------## #
+# ##-----------------------------------------------------------------------## #
+
+@login_required
+def employeeConsult(request):
+    employee_consult = Employee.objects.get(user=request.user)
+    station_consult = Station.objects.filter(employee=employee_consult)
+    bikes = Bike.objects.filter(station = station_consult)
+    return render(request, 'Sbike/employee_consult.html', { 'bikes' : bikes })
+
+# ##-----------------------------------------------------------------------## #
+# ##-------------------END--EMPLOYEE--CONSULT--HIS--STATIONS---------------## #
+# ##-----------------------------------------------------------------------## #
+
+
