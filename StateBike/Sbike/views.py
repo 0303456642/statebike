@@ -399,7 +399,7 @@ def bikeLoan(request):
                                     station_id=request.session['station'])
     except KeyError:
         messages.error(request, 'You Must Be Logged From A Station!')
-        return redirect('/stationlogin/')
+        return redirect('/webprofile')
 
     if len(bikes) == 0:
         messages.error(request, 'Sorry, No Bikes Available!')
@@ -419,49 +419,58 @@ class SanctionExist(Exception):
 
 @login_required
 def givebackView(request):
-    station = Station.objects.get(id=request.session['station'])
-    # check if there is capacity available
-    if station.total_stock() + 1 > station.capacity:
-        messages.error(request, 'Sorry! There Is No Capacity In The Station!')
-        return render(request, 'Sbike/give_back.html')
-    client = Client.objects.get(user=request.user)
+
     try:
-        # check if a sanction exists
-        if (Sanction.objects.filter(client=client).first()) is not None:
-            raise SanctionExist
+        station = Station.objects.get(id=request.session['station'])
+        # check if there is capacity available
+        if station.total_stock() + 1 > station.capacity:
+            messages.error(
+                request, 'Sorry! There Is No Capacity In The Station!')
+            return render(request, 'Sbike/give_back.html')
+        client = Client.objects.get(user=request.user)
+        try:
+            # check if a sanction exists
+            if (Sanction.objects.filter(client=client).first()) is not None:
+                raise SanctionExist
 
-        loan = Loan.objects.get(client=client)
-        bike = Bike.objects.get(id=loan.bike.id)
+            loan = Loan.objects.get(client=client)
+            bike = Bike.objects.get(id=loan.bike.id)
 
-    except SanctionExist:
-        messages.error(request, 'Sorry! A Sanction is Pending')
-        return render(request, 'Sbike/give_back.html')
-    except ObjectDoesNotExist:
-        messages.error(request, 'Sorry! No Loans Outstanding!!')
-        return render(request, 'Sbike/give_back.html')
+        except SanctionExist:
+            messages.error(request, 'Sorry! A Sanction is Pending')
+            return render(request, 'Sbike/give_back.html')
+        except ObjectDoesNotExist:
+            messages.error(request, 'Sorry! No Loans Outstanding!!')
+            return render(request, 'Sbike/give_back.html')
 
-    if request.method == 'POST':
-        bike_id = request.POST.get('select')
+        if request.method == 'POST':
+            bike_id = request.POST.get('select')
 
-        loan = Loan.objects.get(bike=bike_id)
-        loan.set_end_date()
-        days = loan.eval_sanction()
+            loan = Loan.objects.get(bike=bike_id)
+            loan.set_end_date()
+            days = loan.eval_sanction()
 
-        if days > 0:
-            sanction = Sanction()
-            sanction.create_sanction(loan, days)
-        else:
-            Loan.objects.filter(bike=bike_id).delete()
+            if days > 0:
+                sanction = Sanction()
+                sanction.create_sanction(loan, days)
+            else:
+                Loan.objects.filter(bike=bike_id).delete()
 
-        # actualizar info de la bicicleta
-        bike = Bike.objects.get(id=bike_id)
-        bike.give_back()
-        bike.move(station)
+            # actualizar info de la bicicleta
+            bike = Bike.objects.get(id=bike_id)
+            bike.give_back()
+            bike.move(station)
 
-        message = 'Thanks For Return!'
-        return render(request, 'Sbike/give_back.html', {'message': message})
+            message = 'Thanks For Return!'
+            return render(
+                request, 'Sbike/give_back.html', {'message': message})
 
-    return render(request, 'Sbike/give_back.html', {'bike': bike})
+        return render(request, 'Sbike/give_back.html', {'bike': bike})
+
+    except KeyError:
+        messages.error(request, 'You Must Be Logged From A Station!')
+        return redirect('/webprofile')
+
 
 # ##-----------------------------------------------------------------------## #
 # ##------------------------END--GIVE--BACK--------------------------------## #
