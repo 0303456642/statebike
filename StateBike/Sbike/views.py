@@ -877,23 +877,28 @@ def addBike(request):
             if bikeamount  == '':
                 messages.error(request, 'Please Enter a Number')
                 return redirect('/addbikes')
-            if (stockAll + int(bikeamount)) <= stationDes.capacity:
-                for i in range(0, int(bikeamount)):
-                    bike = Bike()
-                    bike.station = stationDes
-                    bike.save()
-                messages.success(
-                    request, str(i+1) + ' Bikes Created In ' + stationDes.name)
-                return redirect('/webprofile')
-            else:
-                msg0 = ' Just Have ' + str(stationDes.capacity - stockAll)
-                msg = msg0 + ' Spaces Empty'
-                messages.error(request, 'The Station ' + stationDes.name + msg)
+
+            try:
+                if (stockAll + int(bikeamount)) <= stationDes.capacity:
+                    for i in range(0, int(bikeamount)):
+                        bike = Bike()
+                        bike.station = stationDes
+                        bike.save()
+                    messages.success(
+                        request, str(i+1) + ' Bikes Created In ' + stationDes.name)
+                    return redirect('/webprofile')
+                else:
+                    msg0 = ' Just Have ' + str(stationDes.capacity - stockAll)
+                    msg = msg0 + ' Spaces Empty'
+                    messages.error(request, 'The Station ' + stationDes.name + msg)
+
+            except UnboundLocalError:
+                messages.error(request, 'Invalid Input For Amount')
 
         station = Station.objects.all()
 
         if len(station) == 0:
-            messages.error(request, 'There is no Created Stations!!')
+            messages.error(request, 'There Is No Created Stations!!')
             return redirect('/webprofile')
 
         return render(request, 'Sbike/add_bike.html', {'stations': station})
@@ -981,7 +986,7 @@ def moveBike(request):
             if station_from_id is not None:
                 station_from = Station.objects.filter(id=station_from_id).first()
                 request.session['station_from'] = station_from_id
-            #PENSAR EN CASO NONE
+
                 stations_to = Station.objects.all()
                 stations_to = stations_to.exclude(id=station_from_id)
                 return render(request, 'Sbike/move_bike.html', {'stations_to' : stations_to})
