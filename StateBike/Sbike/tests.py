@@ -37,7 +37,8 @@ class Accesos(TestCase):
         'stations': 'stations.html',
         'bikeloan': 'bike_loan.html',
         'giveback': 'give_back.html',
-        'editpass': 'client_edit.html'
+        'editpass': 'client_edit.html',
+        'creatst': 'create_station.html'
     }
 
     def test_home(self):
@@ -316,8 +317,8 @@ class Accesos(TestCase):
         # intentemos obtener pagina de prestamos
         res = c.get('/bikeloan', follow=True)
 
-        # deberiamos terminar en stationlogin (porque iniciamos en weblogin)
-        self.assertTrue(self.is_template(res, self.templates['stationlogin']))
+        # deberiamos terminar en clientprofile (porque iniciamos en weblogin)
+        self.assertTrue(self.is_template(res, self.templates['clientprofile']))
 
         # ahora iniciemos en stationlogin
         res = c.post('/stationlogin/',
@@ -384,8 +385,8 @@ class Accesos(TestCase):
         # intentemos obtener pagina de devolucion
         res = c.get('/giveback', follow=True)
 
-        # deberiamos terminar en stationlogin (porque iniciamos en weblogin)
-        self.assertTrue(self.is_template(res, self.templates['stationlogin']))
+        # deberiamos terminar en clientprofile (porque iniciamos en weblogin)
+        self.assertTrue(self.is_template(res, self.templates['clientprofile']))
 
         # ahora iniciemos en stationlogin
         res = c.post('/stationlogin/',
@@ -461,6 +462,71 @@ class Accesos(TestCase):
                      follow=True)
 
         self.assertTrue(self.is_template(res, self.templates['clientprofile']))
+
+
+    def test_create_station(self):
+
+        c = Client()
+
+       # intentamos obtener la pagina sin login
+        res = c.get('/createstation', follow=True)
+
+        # deberiamos obtener el weblogin
+        self.assertTrue(self.is_template(res, self.templates['weblogin']))
+
+        # registrarse, loguearse por weblogin
+        res = c.post('/register/', self.formValid, follow=True)
+
+        res = c.post('/weblogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+        # intentemos obtener la pagina
+        res = c.get('/createstation', follow=True)
+
+        # no nos deberia dejar entrar (solo para admins)
+        self.assertTrue(self.is_template(res, self.templates['clientprofile']))
+        try:
+            res.content.index('Unavailable')
+        except ValueError:
+            self.fail('Mensaje de no admision no encontrado')
+
+        # cerramos sesion
+        res = c.get('/logout', follow=True)
+
+        # ahora como admin
+        self.createAdmin('lucasandy', 'iamanadmin')
+        res = c.post('/weblogin/',
+                     {'username': 'lucasandy',
+                      'password': 'iamanadmin'},
+                     follow=True)
+        self.assertTrue(self.is_template(res, self.templates['admprofile']))
+
+        # intentemos obtener la pagina
+        res = c.get('/createstation', follow=True)
+
+        # nos deberia dejar entrar
+        self.assertTrue(self.is_template(res, self.templates['creatst']))
+
+        # creamos la estacion
+        res = c.post('/createstation/',
+                     {'name': 'Los Platanos',
+                      'address': 'Belgrano 433',
+                      'capacity': 10},
+                     follow=True)
+
+        # cerramos sesion
+        res = c.get('/logout', follow=True)
+
+        # y veamos que se puede loguear desde station
+        res = c.post('/stationlogin/',
+                     {'username': self.formValid['username'],
+                      'password': self.formValid['password1']},
+                     follow=True)
+
+        # si salio bien estamos en el station profile
+        self.assertTrue(self.is_template(res, self.templates['stationprofile']))
 
 
     def addBicycles(self, station, num):
